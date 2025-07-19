@@ -3,6 +3,7 @@
     "name": "Divina",
     "slug": "Divina",
     "version": "1.0.0",
+    "fonts": ["./assets/fonts/"],
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "divina",
@@ -29,7 +30,8 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
-      "expo-router"
+      "expo-router",
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true
