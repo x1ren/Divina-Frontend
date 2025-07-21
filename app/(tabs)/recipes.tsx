@@ -9,7 +9,10 @@ import {
   ViewStyle,
   TextStyle,
   ImageStyle,
+  ImageResizeMode,
 } from "react-native";
+import MaskedView from "@react-native-masked-view/masked-view";
+import { LinearGradient } from "expo-linear-gradient";
 
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useFonts } from "expo-font";
@@ -83,9 +86,23 @@ const Recipes = () => {
     <View style={styles.container}>
       <View style={styles.headerContainer}>
         <View style={styles.headerContent}>
-          <Text style={[styles.title, { fontFamily: "PlusJakartaSans-Bold" }]}>
-            Find Recipes
-          </Text>
+          <MaskedView
+            style={{ height: 40 }}
+            maskElement={
+              <Text
+                style={[styles.title, { fontFamily: "PlusJakartaSans-Bold" }]}
+              >
+                Find Recipes
+              </Text>
+            }
+          >
+            <LinearGradient
+              colors={["#87CEEB", "#4A90E2", "#1E90FF", "#0077BE"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={{ flex: 1 }}
+            />
+          </MaskedView>
           <Text
             style={[styles.subtitle, { fontFamily: "PlusJakartaSans-Medium" }]}
           >
@@ -130,27 +147,51 @@ const Recipes = () => {
           ))}
         </View>
 
-        <Text
-          style={[
-            styles.sectionTitle,
-            { fontFamily: "PlusJakartaSans-SemiBold" },
-          ]}
+        <MaskedView
+          style={{ height: 32 }}
+          maskElement={
+            <Text
+              style={[
+                styles.sectionTitle,
+                { fontFamily: "PlusJakartaSans-SemiBold" },
+              ]}
+            >
+              Trending Now
+            </Text>
+          }
         >
-          Trending Now
-        </Text>
+          <LinearGradient
+            colors={["#87CEEB", "#4A90E2", "#1E90FF", "#0077BE"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{ flex: 1 }}
+          />
+        </MaskedView>
 
         {trendingRecipes.map((recipe) => (
           <TouchableOpacity key={recipe.id} style={styles.recipeCard}>
             <Image source={recipe.image} style={styles.recipeImage} />
             <View style={styles.recipeContent}>
-              <Text
-                style={[
-                  styles.recipeTitle,
-                  { fontFamily: "PlusJakartaSans-SemiBold" },
-                ]}
+              <MaskedView
+                style={{ height: 24 }}
+                maskElement={
+                  <Text
+                    style={[
+                      styles.recipeTitle,
+                      { fontFamily: "PlusJakartaSans-SemiBold" },
+                    ]}
+                  >
+                    {recipe.name}
+                  </Text>
+                }
               >
-                {recipe.name}
-              </Text>
+                <LinearGradient
+                  colors={["#87CEEB", "#4A90E2", "#1E90FF", "#0077BE"]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={{ flex: 1 }}
+                />
+              </MaskedView>
               <View style={styles.recipeMetrics}>
                 <View style={styles.metricItem}>
                   <FontAwesome name="clock-o" size={14} color="#666" />
@@ -294,7 +335,7 @@ const styles = StyleSheet.create<Styles>({
   recipeImage: {
     width: 100,
     height: 100,
-    resizeMode: "cover",
+    resizeMode: "cover" as ImageResizeMode,
   },
   recipeContent: {
     flex: 1,

@@ -10,6 +10,7 @@ import {
   TextStyle,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import MaskedView from "@react-native-masked-view/masked-view";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useFonts } from "expo-font";
 
@@ -73,15 +74,35 @@ export default function GenerateScreen() {
           </View>
 
           <TouchableOpacity style={styles.generateButton}>
-            <Text
-              style={[
-                styles.generateButtonText,
-                { fontFamily: "PlusJakartaSans-SemiBold" },
-              ]}
+            <MaskedView
+              style={{ flexDirection: "row", gap: 10, alignItems: "center" }}
+              maskElement={
+                <View
+                  style={{
+                    flexDirection: "row",
+                    gap: 10,
+                    alignItems: "center",
+                  }}
+                >
+                  <Text
+                    style={[
+                      styles.generateButtonText,
+                      { fontFamily: "PlusJakartaSans-SemiBold" },
+                    ]}
+                  >
+                    Generate Recipe
+                  </Text>
+                  <FontAwesome name="magic" size={20} />
+                </View>
+              }
             >
-              Generate Recipe
-            </Text>
-            <FontAwesome name="magic" size={20} color="#FFF" />
+              <LinearGradient
+                colors={["#87CEEB", "#4A90E2", "#1E90FF", "#0077BE"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{ flex: 1, paddingVertical: 15 }}
+              />
+            </MaskedView>
           </TouchableOpacity>
         </View>
 
@@ -185,16 +206,22 @@ const styles = StyleSheet.create<Styles>({
     textAlignVertical: "top",
   },
   generateButton: {
-    backgroundColor: "#000",
+    backgroundColor: "#fff",
     borderRadius: 8,
     paddingVertical: 15,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 10,
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   generateButtonText: {
-    color: "#fff",
     fontSize: 16,
     fontWeight: "600",
   },
