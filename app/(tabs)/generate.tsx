@@ -1,174 +1,225 @@
 import React from "react";
-import { View, Text, TextInput, ScrollView, StyleSheet } from "react-native";
-import RecipeCard from "../../components/RecipeCard";
+import {
+  StyleSheet,
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  ScrollView,
+  ViewStyle,
+  TextStyle,
+} from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useFonts } from "expo-font";
-import { LinearGradient } from 'expo-linear-gradient';
 
-export default function Home() {
+type Styles = {
+  container: ViewStyle;
+  headerContainer: ViewStyle;
+  headerContent: ViewStyle;
+  title: TextStyle;
+  subtitle: TextStyle;
+  content: ViewStyle;
+  inputContainer: ViewStyle;
+  inputWrapper: ViewStyle;
+  input: TextStyle;
+  generateButton: ViewStyle;
+  generateButtonText: TextStyle;
+  tipsContainer: ViewStyle;
+  tipsTitle: TextStyle;
+  tipCard: ViewStyle;
+  tipText: TextStyle;
+};
+
+export default function GenerateScreen() {
   const [fontsLoaded] = useFonts({
-    "Inter-Regular": require("../../assets/fonts/Inter_18pt-Regular.ttf"),
+    "PlusJakartaSans-Bold": require("../../assets/fonts/PlusJakartaSans-Bold.ttf"),
+    "PlusJakartaSans-SemiBold": require("../../assets/fonts/PlusJakartaSans-SemiBold.ttf"),
+    "PlusJakartaSans-Medium": require("../../assets/fonts/PlusJakartaSans-Medium.ttf"),
+    "PlusJakartaSans-Regular": require("../../assets/fonts/PlusJakartaSans-Regular.ttf"),
   });
+
   if (!fontsLoaded) {
-    return null; 
+    return null;
   }
+
   return (
     <View style={styles.container}>
-      {/* Header with Flowing Design */}
       <View style={styles.headerContainer}>
-        <LinearGradient 
-          colors={['#7FFFD4', '#98FFE0', '#B0FFF0', '#F0FFFF']} 
-          style={styles.headerGradient}
-        >
-          <View style={styles.headerContent}>
-          <Text style={[styles.title, { fontFamily: 'Inter-Regular' }]}>Divina</Text>
-            <Text style={[styles.subtitle, { fontFamily: 'Inter-Regular' }]}>
-              Feeling hungry? What are we cookin' today?
-            </Text>
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Search any recipe..."
-            />
-          </View>
-        </LinearGradient>
-        
-        {/* Flowing Wave Shape using View components */}
-        <View style={styles.waveContainer}>
-          <View style={styles.wave1} />
-          <View style={styles.wave2} />
-          <View style={styles.wave3} />
+        <View style={styles.headerContent}>
+          <Text style={[styles.title, { fontFamily: "PlusJakartaSans-Bold" }]}>
+            Recipe Generator
+          </Text>
+          <Text
+            style={[styles.subtitle, { fontFamily: "PlusJakartaSans-Medium" }]}
+          >
+            Tell me what ingredients you have,{"\n"}and I'll create a recipe for
+            you
+          </Text>
         </View>
       </View>
 
-      {/* Recommendation Section */}
-      <ScrollView style={styles.scrollContainer}>
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { fontFamily: 'Inter-Regular' }]}>Recommendation</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <RecipeCard
-              imageSource={require("../../assets/images/icon.png")}
-              title="Spicy Thai Tom Yum"
-              time="30 mins"
+      <ScrollView style={styles.content}>
+        <View style={styles.inputContainer}>
+          <View style={styles.inputWrapper}>
+            <FontAwesome name="cutlery" size={20} color="#666" />
+            <TextInput
+              style={[styles.input, { fontFamily: "PlusJakartaSans-Regular" }]}
+              placeholder="Enter your ingredients..."
+              multiline
+              numberOfLines={4}
+              placeholderTextColor="#999"
             />
-            <RecipeCard
-              imageSource={require("../../assets/images/icon.png")}
-              title="Creamy Mushroom Soup"
-              time="30 mins"
-            />
-          </ScrollView>
+          </View>
+
+          <TouchableOpacity style={styles.generateButton}>
+            <Text
+              style={[
+                styles.generateButtonText,
+                { fontFamily: "PlusJakartaSans-SemiBold" },
+              ]}
+            >
+              Generate Recipe
+            </Text>
+            <FontAwesome name="magic" size={20} color="#FFF" />
+          </TouchableOpacity>
         </View>
 
-        {/* Recipe of The Week Section */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { fontFamily: 'Inter-Regular' }]}>Recipe of The Week</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {/* Add RecipeCard components here */}
-          </ScrollView>
+        <View style={styles.tipsContainer}>
+          <Text
+            style={[
+              styles.tipsTitle,
+              { fontFamily: "PlusJakartaSans-SemiBold" },
+            ]}
+          >
+            Tips for better results
+          </Text>
+          <View style={styles.tipCard}>
+            <FontAwesome name="lightbulb-o" size={20} color="#666" />
+            <Text
+              style={[
+                styles.tipText,
+                { fontFamily: "PlusJakartaSans-Regular" },
+              ]}
+            >
+              List main ingredients first
+            </Text>
+          </View>
+          <View style={styles.tipCard}>
+            <FontAwesome name="check-circle-o" size={20} color="#666" />
+            <Text
+              style={[
+                styles.tipText,
+                { fontFamily: "PlusJakartaSans-Regular" },
+              ]}
+            >
+              Specify quantities if possible
+            </Text>
+          </View>
+          <View style={styles.tipCard}>
+            <FontAwesome name="clock-o" size={20} color="#666" />
+            <Text
+              style={[
+                styles.tipText,
+                { fontFamily: "PlusJakartaSans-Regular" },
+              ]}
+            >
+              Mention cooking time preferences
+            </Text>
+          </View>
         </View>
       </ScrollView>
     </View>
   );
-};
+}
 
-const styles = StyleSheet.create({
+const styles = StyleSheet.create<Styles>({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   headerContainer: {
-    position: 'relative',
-  },
-  headerGradient: {
-    paddingTop: 40,
-    paddingBottom: 40,
+    paddingTop: 60,
     paddingHorizontal: 20,
-    borderBottomLeftRadius: 40,
-    borderBottomRightRadius: 40,
-  },
-  waveContainer: {
-    position: 'absolute',
-    bottom: -20,
-    left: 0,
-    right: 0,
-    height: 40,
-    flexDirection: 'row',
-    overflow: 'hidden',
-  },
-  wave1: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    width: '40%',
-    height: 30,
-    backgroundColor: '#B0FFF0',
-    borderTopRightRadius: 50,
-    transform: [{ rotate: '5deg' }],
-  },
-  wave2: {
-    position: 'absolute',
-    bottom: 5,
-    left: '30%',
-    width: '50%',
-    height: 25,
-    backgroundColor: '#98FFE0',
-    borderRadius: 40,
-    transform: [{ rotate: '-3deg' }],
-  },
-  wave3: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    width: '35%',
-    height: 20,
-    backgroundColor: '#7FFFD4',
-    borderTopLeftRadius: 50,
-    transform: [{ rotate: '-5deg' }],
+    paddingBottom: 20,
+    backgroundColor: "#fff",
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
   },
   headerContent: {
-    paddingTop: 20,
+    gap: 12,
   },
   title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#0D4F3C',
-    textShadowColor: 'rgba(255, 255, 255, 0.3)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+    fontSize: 32,
+    color: "#000",
+    lineHeight: 40,
   },
   subtitle: {
     fontSize: 16,
-    color: '#2D5F4F',
-    marginTop: 8,
-    opacity: 0.9,
+    color: "#666",
+    lineHeight: 24,
   },
-  searchInput: {
-    marginTop: 20,
-    padding: 15,
-    borderWidth: 0,
-    borderRadius: 25,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  scrollContainer: {
+  content: {
     flex: 1,
-    marginTop: 10,
+    padding: 20,
   },
-  section: {
-    marginTop: 20,
-    paddingHorizontal: 20,
+  inputContainer: {
+    gap: 20,
+    marginBottom: 30,
   },
-  sectionTitle: {
+  inputWrapper: {
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    padding: 15,
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 10,
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+  },
+  input: {
+    flex: 1,
+    fontSize: 16,
+    color: "#333",
+    minHeight: 100,
+    textAlignVertical: "top",
+  },
+  generateButton: {
+    backgroundColor: "#000",
+    borderRadius: 8,
+    paddingVertical: 15,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+  },
+  generateButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  tipsContainer: {
+    gap: 12,
+  },
+  tipsTitle: {
     fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 10,
-    color: '#2D5F4F',
+    fontWeight: "600",
+    color: "#000",
+    marginBottom: 5,
+  },
+  tipCard: {
+    backgroundColor: "#fff",
+    borderRadius: 6,
+    padding: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+  },
+  tipText: {
+    fontSize: 15,
+    lineHeight: 22,
+    color: "#333",
   },
 });
-
-

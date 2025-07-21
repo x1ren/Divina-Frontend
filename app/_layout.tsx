@@ -9,7 +9,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { Stack } from 'expo-router';
 import React from 'react';
 
-import { useColorScheme } from "../components/useColorScheme";
+import { useColorScheme } from "react-native";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useFonts } from "expo-font";
 import { Text as RNText, TextProps } from 'react-native';
