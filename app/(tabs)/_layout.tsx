@@ -128,49 +128,26 @@ export default function TabLayout() {
                   height: 58,
                   borderRadius: 29,
                   marginTop: -8,
-                  backgroundColor: "#fff",
-                  elevation: 2,
-                  shadowColor: "#000",
-                  shadowOffset: { width: 0, height: 2 },
-                  shadowOpacity: 0.1,
-                  shadowRadius: 4,
                 }}
               >
-                {/* White background with blue sky gradient text */}
                 <Animated.View style={sparkleStyle}>
-                  <View
-                    style={{
-                      width: 48,
-                      height: 48,
-                      borderRadius: 24,
-                      backgroundColor: "#fff",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      shadowColor: "#000",
-                      shadowOffset: { width: 0, height: 2 },
-                      shadowOpacity: 0.1,
-                      shadowRadius: 4,
-                      elevation: 2,
-                    }}
-                  >
+                  <View style={{ position: "relative" }}>
                     <LinearGradient
                       colors={["#87CEEB", "#4A90E2", "#1E90FF", "#0077BE"]}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 1 }}
                       style={{
+                        position: "absolute",
                         width: 34,
                         height: 34,
-                        borderRadius: 17,
-                        alignItems: "center",
-                        justifyContent: "center",
+                        opacity: 0,
                       }}
-                    >
-                      <MaterialIcons
-                        name="auto-awesome"
-                        size={24}
-                        color="#fff"
-                      />
-                    </LinearGradient>
+                    />
+                    <MaterialIcons
+                      name="auto-awesome"
+                      size={34}
+                      color="#4A90E2" // Fallback to solid blue if gradient doesn't work
+                    />
                   </View>
                 </Animated.View>
               </Pressable>
