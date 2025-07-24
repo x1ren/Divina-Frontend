@@ -7,7 +7,8 @@ import {
   StyleSheet,
   TouchableOpacity,
 } from "react-native";
-
+import { LinearGradient } from "expo-linear-gradient";
+import MaskedView from "@react-native-masked-view/masked-view";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import RecipeCard from "../../components/RecipeCard";
 import { useFonts } from "expo-font";
@@ -24,95 +25,131 @@ export default function Home() {
   }
   return (
     <View style={styles.container}>
-      
-        <View style={styles.headerContent}>
-          <View style={styles.headerTop}>
-            <View>
-              <Text style={[styles.greeting, { fontFamily: "PlusJakartaSans-Bold"}]}>
-                Good Morning
-              </Text>
-             
-            </View>
-            <TouchableOpacity style={styles.menuButton}>
-              <FontAwesome name="bars" size={24} color="#1B5E20" />
-            </TouchableOpacity>
-          </View>
-
-          <Text style={[styles.subtitle, { fontFamily:  "PlusJakartaSans-SemiBold" }]}>
-            Feeling hungry?{"\n"}What are we cookin' today?
-          </Text>
-
-          <View style={styles.searchBarContainer}>
-            <View style={styles.searchBar}>
-              <FontAwesome name="search" size={20} color="#9E9E9E" />
-              <TextInput
-                style={[styles.searchInput, { fontFamily: "PlusJakartaSans-Regular" }]}
-                placeholder="Search any recipe..."
-                placeholderTextColor="#9E9E9E"
-              />
-              <TouchableOpacity>
-                <FontAwesome name="sliders" size={20} color="#1B5E20" />
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.categoryScroll}
-          >
-            <TouchableOpacity
-              style={[styles.categoryBtn, styles.categoryBtnActive]}
+      <View style={styles.headerContent}>
+        <View style={styles.headerTop}>
+          <View>
+            <MaskedView
+              style={{ height: 24 }}
+              maskElement={
+                <Text
+                  style={[
+                    styles.greeting,
+                    { fontFamily: "PlusJakartaSans-Bold" },
+                  ]}
+                >
+                  Good Morning
+                </Text>
+              }
             >
-              <Text
-                style={[
-                  styles.categoryBtnTextActive,
-                  { fontFamily:  "PlusJakartaSans-Regular" },
-                ]}
-              >
-                All
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.categoryBtn}>
-              <Text
-                style={[
-                  styles.categoryBtnText,
-                  { fontFamily:  "PlusJakartaSans-Regular" },
-                ]}
-              >
-                Soup
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.categoryBtn}>
-              <Text
-                style={[
-                  styles.categoryBtnText,
-                  { fontFamily:  "PlusJakartaSans-Regular" },
-                ]}
-              >
-                Breakfast
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.categoryBtn}>
-              <Text
-                style={[
-                  styles.categoryBtnText,
-                  { fontFamily:  "PlusJakartaSans-Regular"},
-                ]}
-              >
-                Salad
-              </Text>
-            </TouchableOpacity>
-          </ScrollView>
+              
+            </MaskedView>
+          </View>
+          <TouchableOpacity style={styles.menuButton}>
+            <FontAwesome name="bars" size={24} color="#000000" />
+          </TouchableOpacity>
         </View>
-   
+
+        <MaskedView
+          style={{ height: 56 }}
+          maskElement={
+            <Text
+              style={[
+                styles.subtitle,
+                { fontFamily: "PlusJakartaSans-SemiBold" },
+              ]}
+            >
+              Feeling hungry?{"\n"}What are we cookin' today?
+            </Text>
+          }
+        >
+          
+        </MaskedView>
+
+        <View style={styles.searchBarContainer}>
+          <View style={styles.searchBar}>
+            <FontAwesome name="search" size={20} color="#9E9E9E" />
+            <TextInput
+              style={[
+                styles.searchInput,
+                { fontFamily: "PlusJakartaSans-Regular" },
+              ]}
+              placeholder="Search any recipe..."
+              placeholderTextColor="#9E9E9E"
+            />
+            <TouchableOpacity>
+              <FontAwesome name="sliders" size={20} color="#4A90E2" />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.categoryScroll}
+        >
+          <TouchableOpacity
+            style={[styles.categoryBtn, styles.categoryBtnActive]}
+          >
+            <Text
+              style={[
+                styles.categoryBtnTextActive,
+                { fontFamily: "PlusJakartaSans-Regular" },
+              ]}
+            >
+              All
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.categoryBtn}>
+            <Text
+              style={[
+                styles.categoryBtnText,
+                { fontFamily: "PlusJakartaSans-Regular" },
+              ]}
+            >
+              Soup
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.categoryBtn}>
+            <Text
+              style={[
+                styles.categoryBtnText,
+                { fontFamily: "PlusJakartaSans-Regular" },
+              ]}
+            >
+              Breakfast
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.categoryBtn}>
+            <Text
+              style={[
+                styles.categoryBtnText,
+                { fontFamily: "PlusJakartaSans-Regular" },
+              ]}
+            >
+              Salad
+            </Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </View>
 
       {/* Recommendation Section */}
       <ScrollView style={styles.scrollContainer}>
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { fontFamily: "PlusJakartaSans-SemiBold"}]}>
-            Recommendation
-          </Text>
+          <MaskedView
+            style={{ height: 28 }}
+            maskElement={
+              <Text
+                style={[
+                  styles.sectionTitle,
+                  { fontFamily: "PlusJakartaSans-SemiBold" },
+                ]}
+              >
+                Recommendation
+              </Text>
+            }
+          >
+            
+          </MaskedView>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             <RecipeCard
               imageSource={require("../../assets/images/icon.png")}
@@ -129,9 +166,21 @@ export default function Home() {
 
         {/* Recipe of The Week Section */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { fontFamily: "PlusJakartaSans-SemiBold" }]}>
-            Recipe of The Week
-          </Text>
+          <MaskedView
+            style={{ height: 28 }}
+            maskElement={
+              <Text
+                style={[
+                  styles.sectionTitle,
+                  { fontFamily: "PlusJakartaSans-SemiBold" },
+                ]}
+              >
+                Recipe of The Week
+              </Text>
+            }
+          >
+            
+          </MaskedView>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             {/* Add RecipeCard components here */}
           </ScrollView>
@@ -163,13 +212,13 @@ const styles = StyleSheet.create({
   },
   greeting: {
     fontSize: 16,
-    color: "#1B5E20",
+    color: "#000000ff",
     opacity: 0.8,
   },
   title: {
     fontSize: 28,
     fontWeight: "bold",
-    color: "#1B5E20",
+    color: "#000000ff",
     marginTop: 4,
   },
   menuButton: {
@@ -190,7 +239,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 20,
-    color: "#1B5E20",
+    color: "#000000ff",
     lineHeight: 28,
   },
   searchBarContainer: {
@@ -229,10 +278,10 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   categoryBtnActive: {
-    backgroundColor: "#1B5E20",
+    backgroundColor: "#000000ff",
   },
   categoryBtnText: {
-    color: "#1B5E20",
+    color: "#000000ff",
     fontSize: 14,
   },
   categoryBtnTextActive: {
@@ -251,6 +300,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "600",
     marginBottom: 15,
-    color: "#1B5E20",
+    color: "#000000ff",
   },
 });

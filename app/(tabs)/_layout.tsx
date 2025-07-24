@@ -146,7 +146,7 @@ export default function TabLayout() {
                     <MaterialIcons
                       name="auto-awesome"
                       size={34}
-                      color="#4A90E2" // Fallback to solid blue if gradient doesn't work
+                      color="#4A90E2"
                     />
                   </View>
                 </Animated.View>
