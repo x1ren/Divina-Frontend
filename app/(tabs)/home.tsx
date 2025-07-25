@@ -7,7 +7,7 @@ import {
   StyleSheet,
   TouchableOpacity,
 } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
+
 import MaskedView from "@react-native-masked-view/masked-view";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import RecipeCard from "../../components/RecipeCard";
@@ -194,6 +194,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
+    paddingTop: 10,
   },
   headerContainer: {
     paddingTop: 60,
@@ -204,11 +205,14 @@ const styles = StyleSheet.create({
   },
   headerContent: {
     gap: 20,
+    paddingHorizontal: 20,
+    paddingTop: 10,
   },
   headerTop: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    marginBottom: 10,
   },
   greeting: {
     fontSize: 16,
@@ -243,14 +247,15 @@ const styles = StyleSheet.create({
     lineHeight: 28,
   },
   searchBarContainer: {
-    marginTop: 10,
+    marginTop: 20,
+    marginBottom: 10,
   },
   searchBar: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#fff",
     paddingHorizontal: 15,
-    paddingVertical: 12,
+    paddingVertical: 14,
     borderRadius: 12,
     gap: 10,
     shadowColor: "#000",
@@ -268,14 +273,15 @@ const styles = StyleSheet.create({
     color: "#424242",
   },
   categoryScroll: {
-    marginTop: 5,
+    marginTop: 15,
+    paddingLeft: 5,
   },
   categoryBtn: {
     paddingHorizontal: 20,
-    paddingVertical: 8,
+    paddingVertical: 10,
     borderRadius: 20,
     backgroundColor: "transparent",
-    marginRight: 10,
+    marginRight: 12,
   },
   categoryBtnActive: {
     backgroundColor: "#000000ff",
@@ -290,16 +296,18 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     flex: 1,
-    marginTop: 10,
+    marginTop: 20,
+    paddingBottom: 100,
   },
   section: {
-    marginTop: 20,
+    marginTop: 25,
     paddingHorizontal: 20,
+    marginBottom: 15,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: "600",
-    marginBottom: 15,
+    marginBottom: 20,
     color: "#000000ff",
   },
 });
