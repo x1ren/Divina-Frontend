@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   ScrollView,
   StyleSheet,
   TouchableOpacity,
+  ActivityIndicator
 } from "react-native";
 
 import MaskedView from "@react-native-masked-view/masked-view";
@@ -23,6 +24,32 @@ export default function Home() {
   if (!fontsLoaded) {
     return null;
   }
+
+  const [data,setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  async function fetchData() {
+     
+
+    try {
+      const response = await fetch("https://api.example.com/recipes");
+      const data = await response.json();
+      setData(data);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    }finally{
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+ if (loading) {
+    return <ActivityIndicator size="large" color="blue" />;
+  }
+
+
   return (
     <View style={styles.container}>
       <View style={styles.headerContent}>
