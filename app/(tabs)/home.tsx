@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 
+import { router } from "expo-router";
 import MaskedView from "@react-native-masked-view/masked-view";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import RecipeCard from "../../components/RecipeCard";
@@ -22,32 +23,47 @@ export default function Home() {
     "PlusJakartaSans-Medium": require("../../assets/fonts/PlusJakartaSans-Medium.ttf"),
     "PlusJakartaSans-Regular": require("../../assets/fonts/PlusJakartaSans-Regular.ttf"),
   });
-type Recipe = {
-  id: any;
-  image: string;
-  title: string;
-  readyInMinutes: number;
-  servings: number;
-};
-
-
+  type Recipe = {
+    id: number;
+    image: string;
+    title: string;
+    readyInMinutes: number;
+    servings: number;
+  };
 
   const [data, setData] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
 
-  if (!fontsLoaded) {
-    return null;
-  }
+  // Navigation handler
+  const handleRecipePress = (recipeId: number) => {
+    router.push({
+      pathname: "/(tabs)/recipes/[id]",
+      params: { id: recipeId.toString() },
+    });
+  };
 
   async function fetchData() {
     try {
       const response = await fetch(
         "http://localhost:8080/api/recipes/recommendations"
       );
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
       const data = await response.json();
-      setData(data);
+      // Ensure each item has required properties
+      const validData = data.filter(
+        (item: any) =>
+          item &&
+          item.title &&
+          item.image &&
+          typeof item.readyInMinutes === "number" &&
+          typeof item.servings === "number"
+      );
+      setData(validData);
     } catch (error) {
       console.error("Error fetching data:", error);
+      setData([]); // Set empty array on error
     } finally {
       setLoading(false);
     }
@@ -56,6 +72,10 @@ type Recipe = {
   useEffect(() => {
     fetchData();
   }, []);
+
+  if (!fontsLoaded) {
+    return null;
+  }
 
   if (loading) {
     return <ActivityIndicator size="large" color="blue" />;
@@ -183,15 +203,18 @@ type Recipe = {
             }
           ></MaskedView>
           <FlatList
-            data={data.slice(0, 5)} 
+            data={data.slice(0, 5)}
             keyExtractor={(item) => item.id.toString()}
             renderItem={({ item }) => (
-              <RecipeCard
-                imageSource={{ uri: item.image }}
-                title={item.title}
-                time={`${item.readyInMinutes} mins`}
-                servings={item.servings}
-              />
+              <TouchableOpacity onPress={() => handleRecipePress(item.id)}>
+                <RecipeCard
+                  id={item.id}
+                  imageSource={{ uri: item.image }}
+                  title={item.title}
+                  time={`${item.readyInMinutes} mins`}
+                  servings={item.servings}
+                />
+              </TouchableOpacity>
             )}
             horizontal
             showsHorizontalScrollIndicator={false}

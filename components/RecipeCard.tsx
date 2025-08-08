@@ -2,20 +2,45 @@ import React from "react";
 import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
+import { useNavigation } from "@react-navigation/native";
+import type { StackNavigationProp } from "@react-navigation/stack";
 
-const RecipeCard = ({
-  imageSource,
-  title,
-  time,
-  servings,
-}: {
+// Define your navigation param list type
+type RootStackParamList = {
+  RecipeDetails: { id: string };
+  // add other routes if needed
+};
+
+// Type for the navigation prop specifically for this component
+type RecipeCardNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  "RecipeDetails"
+>;
+
+// Props type for RecipeCard
+type RecipeCardProps = {
+  id: string | number;
   imageSource: any;
   title: string;
   time: string;
   servings: number;
+};
+
+const RecipeCard: React.FC<RecipeCardProps> = ({
+  id,
+  imageSource,
+  title,
+  time,
+  servings,
 }) => {
+  const navigation = useNavigation<RecipeCardNavigationProp>();
+
+  const handlePress = () => {
+    navigation.navigate("RecipeDetails", { id: id.toString() });
+  };
+
   return (
-    <TouchableOpacity style={styles.card}>
+    <TouchableOpacity style={styles.card} onPress={handlePress}>
       <View style={styles.imageContainer}>
         <Image source={imageSource} style={styles.cardImage} />
         <LinearGradient
