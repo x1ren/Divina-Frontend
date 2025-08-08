@@ -34,13 +34,7 @@ export default function Home() {
   const [data, setData] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Navigation handler
-  const handleRecipePress = (recipeId: number) => {
-    router.push({
-      pathname: "/(tabs)/recipes/[id]",
-      params: { id: recipeId.toString() },
-    });
-  };
+ 
 
   async function fetchData() {
     try {
@@ -202,19 +196,18 @@ export default function Home() {
               </Text>
             }
           ></MaskedView>
-          <FlatList
+            <FlatList
             data={data.slice(0, 5)}
             keyExtractor={(item) => item.id.toString()}
             renderItem={({ item }) => (
-              <TouchableOpacity onPress={() => handleRecipePress(item.id)}>
-                <RecipeCard
-                  id={item.id}
-                  imageSource={{ uri: item.image }}
-                  title={item.title}
-                  time={`${item.readyInMinutes} mins`}
-                  servings={item.servings}
-                />
-              </TouchableOpacity>
+             
+              <RecipeCard
+                id={item.id}
+                imageSource={{ uri: item.image }}
+                title={item.title}
+                time={`${item.readyInMinutes} mins`}
+                servings={item.servings}
+              />
             )}
             horizontal
             showsHorizontalScrollIndicator={false}

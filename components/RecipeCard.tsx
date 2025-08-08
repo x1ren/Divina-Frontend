@@ -2,22 +2,8 @@ import React from "react";
 import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
-import { useNavigation } from "@react-navigation/native";
-import type { StackNavigationProp } from "@react-navigation/stack";
+import { useRouter } from "expo-router";
 
-// Define your navigation param list type
-type RootStackParamList = {
-  RecipeDetails: { id: string };
-  // add other routes if needed
-};
-
-// Type for the navigation prop specifically for this component
-type RecipeCardNavigationProp = StackNavigationProp<
-  RootStackParamList,
-  "RecipeDetails"
->;
-
-// Props type for RecipeCard
 type RecipeCardProps = {
   id: string | number;
   imageSource: any;
@@ -33,10 +19,13 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
   time,
   servings,
 }) => {
-  const navigation = useNavigation<RecipeCardNavigationProp>();
+  const router = useRouter();
 
   const handlePress = () => {
-    navigation.navigate("RecipeDetails", { id: id.toString() });
+    router.push({
+      pathname: "/recipes/[id]",
+      params: { id: id.toString() },
+    });
   };
 
   return (

@@ -22,7 +22,7 @@ type Recipe = {
   readyInMinutes: number;
   servings: number;
   instructions: string;
-  ingredients: Array<{
+  extendedIngredients: Array<{
     name: string;
     amount: number;
     unit: string;
@@ -43,11 +43,9 @@ export default function RecipeDetails() {
   useEffect(() => {
     async function fetchRecipeDetails() {
       try {
-        const response = await fetch(
-          `http://localhost:8080/api/recipes/${id}`
-        );
+        const response = await fetch(`http://localhost:8080/api/recipes/${id}`);
         if (!response.ok) {
-          throw new Error('Recipe not found');
+          throw new Error("Recipe not found");
         }
         const data = await response.json();
         setRecipe(data);
@@ -74,7 +72,10 @@ export default function RecipeDetails() {
     return (
       <View style={[styles.container, styles.centered]}>
         <Text style={styles.errorText}>Recipe not found</Text>
-        <TouchableOpacity style={styles.backButtonError} onPress={() => router.back()}>
+        <TouchableOpacity
+          style={styles.backButtonError}
+          onPress={() => router.back()}
+        >
           <Text style={styles.backButtonText}>Go Back</Text>
         </TouchableOpacity>
       </View>
@@ -90,14 +91,17 @@ export default function RecipeDetails() {
             colors={["transparent", "rgba(0,0,0,0.8)"]}
             style={styles.gradient}
           />
-          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => router.back()}
+          >
             <FontAwesome name="arrow-left" size={24} color="#fff" />
           </TouchableOpacity>
           <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-            <FontAwesome 
-              name={isSaved ? "bookmark" : "bookmark-o"} 
-              size={24} 
-              color="#fff" 
+            <FontAwesome
+              name={isSaved ? "bookmark" : "bookmark-o"}
+              size={24}
+              color="#fff"
             />
           </TouchableOpacity>
           <View style={styles.imageOverlay}>
@@ -105,7 +109,9 @@ export default function RecipeDetails() {
             <View style={styles.metaInfo}>
               <View style={styles.metaItem}>
                 <FontAwesome name="clock-o" size={20} color="#fff" />
-                <Text style={styles.metaText}>{recipe.readyInMinutes} mins</Text>
+                <Text style={styles.metaText}>
+                  {recipe.readyInMinutes} mins
+                </Text>
               </View>
               <View style={styles.metaItem}>
                 <FontAwesome name="users" size={20} color="#fff" />
@@ -118,10 +124,11 @@ export default function RecipeDetails() {
         <View style={styles.content}>
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Ingredients</Text>
-            {recipe.ingredients?.map((ingredient, index) => (
+            {recipe.extendedIngredients?.map((ingredient, index) => (
               <View key={index} style={styles.ingredientItem}>
+                <FontAwesome name="check-circle" size={20} color="#4CAF50" />
                 <Text style={styles.ingredientText}>
-                  • {ingredient.amount} {ingredient.unit} {ingredient.name}
+                  {ingredient.amount} {ingredient.unit} {ingredient.name}
                 </Text>
               </View>
             ))}
@@ -141,6 +148,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
+    paddingBottom: 60, // Add padding to account for tab bar
   },
   centered: {
     justifyContent: "center",
@@ -150,37 +158,59 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   imageContainer: {
-    height: 300,
+    height: 450,
     position: "relative",
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+    overflow: "hidden",
+    elevation: 4,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
   },
   image: {
     width: "100%",
     height: "100%",
+    resizeMode: "cover",
   },
   gradient: {
     position: "absolute",
     left: 0,
     right: 0,
     bottom: 0,
-    height: "50%",
+    height: "100%",
+    backgroundColor: "rgba(0,0,0,0.1)",
   },
   backButton: {
     position: "absolute",
-    top: 40,
+    top: 50,
     left: 20,
     zIndex: 2,
-    backgroundColor: "rgba(0,0,0,0.4)",
-    borderRadius: 20,
-    padding: 8,
+    backgroundColor: "rgba(255,255,255,0.2)",
+    borderRadius: 25,
+    width: 50,
+    height: 50,
+    justifyContent: "center",
+    alignItems: "center",
+    backdropFilter: "blur(10px)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.3)",
   },
   saveButton: {
     position: "absolute",
-    top: 40,
+    top: 50,
     right: 20,
     zIndex: 2,
-    backgroundColor: "rgba(0,0,0,0.4)",
-    borderRadius: 20,
-    padding: 8,
+    backgroundColor: "rgba(255,255,255,0.2)",
+    borderRadius: 25,
+    width: 50,
+    height: 50,
+    justifyContent: "center",
+    alignItems: "center",
+    backdropFilter: "blur(10px)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.3)",
   },
   imageOverlay: {
     position: "absolute",
@@ -190,69 +220,121 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   title: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: "bold",
     color: "#fff",
-    marginBottom: 10,
+    marginBottom: 15,
+    textShadowColor: "rgba(0,0,0,0.5)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 10,
+    letterSpacing: 0.5,
   },
   metaInfo: {
     flexDirection: "row",
-    gap: 20,
+    gap: 15,
   },
   metaItem: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
+    backgroundColor: "rgba(255,255,255,0.2)",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.3)",
   },
   metaText: {
     color: "#fff",
-    fontSize: 16,
+    fontSize: 15,
+    fontWeight: "600",
+    textShadowColor: "rgba(0,0,0,0.3)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
   content: {
-    padding: 20,
+    padding: 24,
+    marginTop: -30,
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    paddingBottom: 40, // Additional padding at the bottom for better spacing
   },
   section: {
-    marginBottom: 30,
+    marginBottom: 25,
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    padding: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
+    marginHorizontal: 2, // Add slight margin on sides
   },
   sectionTitle: {
-    fontSize: 22,
-    fontWeight: "600",
-    marginBottom: 15,
+    fontSize: 24,
+    fontWeight: "700",
+    marginBottom: 20,
     color: "#000",
+    letterSpacing: 0.5,
   },
   ingredientItem: {
-    marginBottom: 10,
+    marginBottom: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f8f9fa",
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#eee",
   },
   ingredientText: {
     fontSize: 16,
-    color: "#333",
+    color: "#2c3e50",
     lineHeight: 24,
+    flex: 1,
+    paddingLeft: 8,
   },
   instructions: {
     fontSize: 16,
-    color: "#333",
-    lineHeight: 24,
+    color: "#2c3e50",
+    lineHeight: 28,
+    backgroundColor: "#f8f9fa",
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#eee",
   },
   loadingText: {
-    marginTop: 10,
+    marginTop: 15,
     fontSize: 16,
     color: "#666",
+    letterSpacing: 0.5,
   },
   errorText: {
     fontSize: 18,
     color: "#333",
     textAlign: "center",
-    marginBottom: 20,
+    marginBottom: 24,
+    letterSpacing: 0.5,
+    maxWidth: "80%",
   },
   backButtonError: {
     backgroundColor: "#007AFF",
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 8,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 15,
+    shadowColor: "#007AFF",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4.65,
+    elevation: 6,
   },
   backButtonText: {
     color: "#fff",
     fontSize: 16,
     fontWeight: "600",
+    letterSpacing: 0.5,
   },
 });
