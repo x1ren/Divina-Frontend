@@ -8,12 +8,14 @@ import {
   TouchableOpacity,
   Dimensions,
   ActivityIndicator,
+  StatusBar,
+  Animated,
 } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { LinearGradient } from "expo-linear-gradient";
 
-const { width } = Dimensions.get("window");
+const { width, height } = Dimensions.get("window");
 
 type Recipe = {
   id: string;
@@ -27,6 +29,9 @@ type Recipe = {
     amount: number;
     unit: string;
   }>;
+  description: string;   // Add description field
+  difficulty: string;    // Add difficulty field (e.g., "Medium")
+  rating: number;        // Add rating field (e.g., 4.7)
 };
 
 export default function RecipeDetails() {
@@ -34,6 +39,9 @@ export default function RecipeDetails() {
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [loading, setLoading] = useState(true);
   const [isSaved, setIsSaved] = useState(false);
+  const [activeTab, setActiveTab] = useState<'ingredients' | 'instructions'>('ingredients');
+  const [showFullDesc, setShowFullDesc] = useState(false);
+  const scrollY = new Animated.Value(0);
 
   const handleSave = () => {
     setIsSaved(!isSaved);
@@ -62,8 +70,10 @@ export default function RecipeDetails() {
   if (loading) {
     return (
       <View style={[styles.container, styles.centered]}>
-        <ActivityIndicator size="large" color="#007AFF" />
-        <Text style={styles.loadingText}>Loading recipe...</Text>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#FF6B6B" />
+          <Text style={styles.loadingText}>Preparing your recipe...</Text>
+        </View>
       </View>
     );
   }
@@ -71,75 +81,163 @@ export default function RecipeDetails() {
   if (!recipe) {
     return (
       <View style={[styles.container, styles.centered]}>
-        <Text style={styles.errorText}>Recipe not found</Text>
-        <TouchableOpacity
-          style={styles.backButtonError}
-          onPress={() => router.back()}
-        >
-          <Text style={styles.backButtonText}>Go Back</Text>
-        </TouchableOpacity>
+        <View style={styles.errorContainer}>
+          <FontAwesome name="exclamation-triangle" size={64} color="#FF6B6B" />
+          <Text style={styles.errorTitle}>Recipe Not Found</Text>
+          <Text style={styles.errorSubtitle}>
+            We couldn't find the recipe you're looking for.
+          </Text>
+          <TouchableOpacity
+            style={styles.retryButton}
+            onPress={() => router.back()}
+          >
+            <Text style={styles.retryButtonText}>Try Again</Text>
+          </TouchableOpacity>
+        </View>
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      <ScrollView style={styles.scrollView}>
-        <View style={styles.imageContainer}>
-          <Image source={{ uri: recipe.image }} style={styles.image} />
+      <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+
+      <Animated.ScrollView
+        style={styles.scrollView}
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: false }
+        )}
+        scrollEventThrottle={16}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Hero Image Section */}
+        <View style={styles.heroContainer}>
+          <Image source={{ uri: recipe.image }} style={styles.heroImage} />
           <LinearGradient
-            colors={["transparent", "rgba(0,0,0,0.8)"]}
-            style={styles.gradient}
+            colors={["transparent", "rgba(0,0,0,0.7)"]}
+            style={styles.heroGradient}
           />
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => router.back()}
-          >
-            <FontAwesome name="arrow-left" size={24} color="#fff" />
-          </TouchableOpacity>
+
+          {/* Save Button */}
           <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-            <FontAwesome
-              name={isSaved ? "bookmark" : "bookmark-o"}
-              size={24}
-              color="#fff"
-            />
+            <View style={[styles.saveButtonInner, isSaved && styles.saveButtonActive]}>
+              <FontAwesome
+                name={isSaved ? "heart" : "heart-o"}
+                size={24}
+                color={isSaved ? "#fff" : "#666"}
+              />
+            </View>
           </TouchableOpacity>
-          <View style={styles.imageOverlay}>
-            <Text style={styles.title}>{recipe.title}</Text>
-            <View style={styles.metaInfo}>
-              <View style={styles.metaItem}>
-                <FontAwesome name="clock-o" size={20} color="#fff" />
-                <Text style={styles.metaText}>
-                  {recipe.readyInMinutes} mins
-                </Text>
+
+          {/* Recipe Title & Meta */}
+          <View style={styles.heroContent}>
+            <Text style={styles.recipeTitle}>{recipe.title}</Text>
+            <View style={styles.metaContainer}>
+              {/* Cook Time */}
+              <View style={styles.metaCard}>
+                <FontAwesome name="clock-o" size={16} color="#444" />
+                <Text style={styles.metaText}>{recipe.readyInMinutes} min</Text>
               </View>
-              <View style={styles.metaItem}>
-                <FontAwesome name="users" size={20} color="#fff" />
-                <Text style={styles.metaText}>{recipe.servings} servings</Text>
+
+              {/* Difficulty */}
+              <View style={styles.metaCard}>
+                <FontAwesome name="signal" size={16} color="#444" />
+                <Text style={styles.metaText}>{recipe.difficulty || "Medium"}</Text>
+              </View>
+
+              {/* Rating */}
+              <View style={[styles.metaCard, styles.ratingCard]}>
+                <FontAwesome name="star" size={16} color="#FFB400" />
+                <Text style={styles.metaText}>{recipe.rating?.toFixed(1) || "4.7"}</Text>
               </View>
             </View>
           </View>
         </View>
 
-        <View style={styles.content}>
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Ingredients</Text>
-            {recipe.extendedIngredients?.map((ingredient, index) => (
-              <View key={index} style={styles.ingredientItem}>
-                <FontAwesome name="check-circle" size={20} color="#4CAF50" />
-                <Text style={styles.ingredientText}>
-                  {ingredient.amount} {ingredient.unit} {ingredient.name}
-                </Text>
-              </View>
-            ))}
+        {/* Description */}
+        <View style={styles.descriptionContainer}>
+          <Text style={styles.descriptionText} numberOfLines={showFullDesc ? undefined : 3}>
+            {recipe.description}
+          </Text>
+          {!showFullDesc && (
+            <TouchableOpacity onPress={() => setShowFullDesc(true)}>
+              <Text style={styles.showMoreText}>Show more</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {/* Content Section */}
+        <View style={styles.contentContainer}>
+          {/* Tab Navigation */}
+          <View style={styles.tabContainer}>
+            <TouchableOpacity
+              style={[styles.tab, activeTab === 'ingredients' && styles.activeTab]}
+              onPress={() => setActiveTab('ingredients')}
+            >
+              <Text style={[styles.tabText, activeTab === 'ingredients' && styles.activeTabText]}>
+                Ingredients
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.tab, activeTab === 'instructions' && styles.activeTab]}
+              onPress={() => setActiveTab('instructions')}
+            >
+              <Text style={[styles.tabText, activeTab === 'instructions' && styles.activeTabText]}>
+                Directions
+              </Text>
+            </TouchableOpacity>
           </View>
 
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Instructions</Text>
-            <Text style={styles.instructions}>{recipe.instructions}</Text>
-          </View>
+          {/* Tab Content */}
+          {activeTab === 'ingredients' ? (
+            <View style={styles.tabContent}>
+              <View style={styles.ingredientsHeader}>
+                <Text style={styles.sectionTitle}>
+                  {recipe.extendedIngredients?.length || 0} Ingredients
+                </Text>
+                <Text style={styles.sectionSubtitle}>
+                  Everything you need for this recipe
+                </Text>
+              </View>
+
+              <View style={styles.ingredientsList}>
+                {recipe.extendedIngredients?.map((ingredient, index) => (
+                  <View key={index} style={styles.ingredientCard}>
+                    <View style={styles.ingredientCheckbox}>
+                      <FontAwesome name="check" size={14} color="#4ECDC4" />
+                    </View>
+                    <View style={styles.ingredientContent}>
+                      <Text style={styles.ingredientName}>{ingredient.name}</Text>
+                      <Text style={styles.ingredientAmount}>
+                        {ingredient.amount} {ingredient.unit}
+                      </Text>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            </View>
+          ) : (
+            <View style={styles.tabContent}>
+              <View style={styles.instructionsHeader}>
+                <Text style={styles.sectionTitle}>How to Cook</Text>
+                <Text style={styles.sectionSubtitle}>
+                  Follow these steps for the perfect result
+                </Text>
+              </View>
+
+              <View style={styles.instructionsCard}>
+                <Text style={styles.instructionsText}>{recipe.instructions}</Text>
+              </View>
+            </View>
+          )}
+
+          {/* Watch Video Button */}
+          <TouchableOpacity style={styles.watchVideoButton}>
+            <Text style={styles.watchVideoText}>Watch Video</Text>
+          </TouchableOpacity>
         </View>
-      </ScrollView>
+      </Animated.ScrollView>
     </View>
   );
 }
@@ -147,8 +245,7 @@ export default function RecipeDetails() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
-    paddingBottom: 60, // Add padding to account for tab bar
+    backgroundColor: "#FAFAFA",
   },
   centered: {
     justifyContent: "center",
@@ -157,184 +254,292 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
-  imageContainer: {
-    height: 450,
-    position: "relative",
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
-    overflow: "hidden",
-    elevation: 4,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+
+  // Loading States
+  loadingContainer: {
+    alignItems: "center",
   },
-  image: {
+  loadingText: {
+    marginTop: 20,
+    fontSize: 16,
+    color: "#666",
+    fontWeight: "500",
+  },
+  errorContainer: {
+    alignItems: "center",
+    paddingHorizontal: 40,
+  },
+  errorTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#333",
+    marginTop: 20,
+    marginBottom: 8,
+  },
+  errorSubtitle: {
+    fontSize: 16,
+    color: "#666",
+    textAlign: "center",
+    lineHeight: 24,
+    marginBottom: 30,
+  },
+  retryButton: {
+    backgroundColor: "#FF6B6B",
+    paddingHorizontal: 32,
+    paddingVertical: 16,
+    borderRadius: 25,
+    shadowColor: "#FF6B6B",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  retryButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+
+  // Hero Section
+  heroContainer: {
+    height: height * 0.45,
+    position: "relative",
+    overflow: "hidden",
+  },
+  heroImage: {
     width: "100%",
     height: "100%",
     resizeMode: "cover",
   },
-  gradient: {
+  heroGradient: {
     position: "absolute",
     left: 0,
     right: 0,
     bottom: 0,
     height: "100%",
-    backgroundColor: "rgba(0,0,0,0.1)",
-  },
-  backButton: {
-    position: "absolute",
-    top: 50,
-    left: 20,
-    zIndex: 2,
-    backgroundColor: "rgba(255,255,255,0.2)",
-    borderRadius: 25,
-    width: 50,
-    height: 50,
-    justifyContent: "center",
-    alignItems: "center",
-    backdropFilter: "blur(10px)",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.3)",
   },
   saveButton: {
     position: "absolute",
-    top: 50,
+    top: (StatusBar.currentHeight || 44) + 10,
     right: 20,
-    zIndex: 2,
-    backgroundColor: "rgba(255,255,255,0.2)",
-    borderRadius: 25,
+    zIndex: 10,
+  },
+  saveButtonInner: {
     width: 50,
     height: 50,
+    borderRadius: 25,
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
     justifyContent: "center",
     alignItems: "center",
-    backdropFilter: "blur(10px)",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.3)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 5,
   },
-  imageOverlay: {
+  saveButtonActive: {
+    backgroundColor: "#FF6B6B",
+  },
+  heroContent: {
     position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: 20,
+    bottom: 20,
+    left: 20,
+    right: 20,
   },
-  title: {
-    fontSize: 32,
-    fontWeight: "bold",
+  recipeTitle: {
+    fontSize: 28,
+    fontWeight: "800",
     color: "#fff",
-    marginBottom: 15,
-    textShadowColor: "rgba(0,0,0,0.5)",
+    marginBottom: 12,
+    textShadowColor: "rgba(0,0,0,0.6)",
     textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 10,
-    letterSpacing: 0.5,
+    textShadowRadius: 8,
+    lineHeight: 34,
   },
-  metaInfo: {
+  metaContainer: {
     flexDirection: "row",
-    gap: 15,
+    gap: 16,
   },
-  metaItem: {
+  metaCard: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
-    backgroundColor: "rgba(255,255,255,0.2)",
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.3)",
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 16,
+    marginRight: 12,
+  },
+  ratingCard: {
+    backgroundColor: "#fff",
   },
   metaText: {
-    color: "#fff",
-    fontSize: 15,
+    marginLeft: 6,
+    fontSize: 14,
     fontWeight: "600",
-    textShadowColor: "rgba(0,0,0,0.3)",
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
+    color: "#333",
   },
-  content: {
-    padding: 24,
-    marginTop: -30,
-    backgroundColor: "#fff",
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
-    paddingBottom: 40, // Additional padding at the bottom for better spacing
+
+  // Description
+  descriptionContainer: {
+    marginHorizontal: 24,
+    marginTop: 20,
   },
-  section: {
-    marginBottom: 25,
-    backgroundColor: "#fff",
+  descriptionText: {
+    fontSize: 14,
+    color: "#444",
+    lineHeight: 20,
+    fontWeight: "400",
+  },
+  showMoreText: {
+    marginTop: 4,
+    color: "#4ECDC4",
+    fontWeight: "600",
+  },
+
+  // Content Section
+  contentContainer: {
+    backgroundColor: "#FAFAFA",
+    marginTop: 24,
+    paddingTop: 0,
+    minHeight: height * 0.5,
+  },
+
+  // Tabs
+  tabContainer: {
+    flexDirection: "row",
+    backgroundColor: "#F5F5F5",
+    marginHorizontal: 24,
     borderRadius: 20,
-    padding: 20,
+    padding: 4,
+    marginBottom: 24,
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 16,
+    alignItems: "center",
+  },
+  activeTab: {
+    backgroundColor: "#fff",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 2,
-    marginHorizontal: 2, // Add slight margin on sides
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  tabText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#666",
+  },
+  activeTabText: {
+    color: "#333",
+  },
+  tabContent: {
+    paddingHorizontal: 24,
+    paddingBottom: 40,
+  },
+
+  // Section Headers
+  ingredientsHeader: {
+    marginBottom: 24,
+  },
+  instructionsHeader: {
+    marginBottom: 24,
   },
   sectionTitle: {
     fontSize: 24,
-    fontWeight: "700",
-    marginBottom: 20,
-    color: "#000",
-    letterSpacing: 0.5,
+    fontWeight: "800",
+    color: "#333",
+    marginBottom: 6,
   },
-  ingredientItem: {
-    marginBottom: 14,
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#f8f9fa",
-    padding: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#eee",
-  },
-  ingredientText: {
-    fontSize: 16,
-    color: "#2c3e50",
-    lineHeight: 24,
-    flex: 1,
-    paddingLeft: 8,
-  },
-  instructions: {
-    fontSize: 16,
-    color: "#2c3e50",
-    lineHeight: 28,
-    backgroundColor: "#f8f9fa",
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#eee",
-  },
-  loadingText: {
-    marginTop: 15,
+  sectionSubtitle: {
     fontSize: 16,
     color: "#666",
-    letterSpacing: 0.5,
+    lineHeight: 22,
   },
-  errorText: {
-    fontSize: 18,
-    color: "#333",
-    textAlign: "center",
-    marginBottom: 24,
-    letterSpacing: 0.5,
-    maxWidth: "80%",
+
+  // Ingredients
+  ingredientsList: {
+    gap: 12,
   },
-  backButtonError: {
-    backgroundColor: "#007AFF",
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 15,
-    shadowColor: "#007AFF",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4.65,
-    elevation: 6,
+  ingredientCard: {
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 20,
+    flexDirection: "row",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: "#F0F0F0",
   },
-  backButtonText: {
-    color: "#fff",
+  ingredientCheckbox: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "#E8F8F5",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 16,
+  },
+  ingredientContent: {
+    flex: 1,
+  },
+  ingredientName: {
     fontSize: 16,
     fontWeight: "600",
-    letterSpacing: 0.5,
+    color: "#333",
+    marginBottom: 2,
+    textTransform: "capitalize",
+  },
+  ingredientAmount: {
+    fontSize: 14,
+    color: "#666",
+    fontWeight: "500",
+  },
+
+  // Instructions
+  instructionsCard: {
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    padding: 24,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: "#F0F0F0",
+  },
+  instructionsText: {
+    fontSize: 16,
+    color: "#444",
+    lineHeight: 26,
+    fontWeight: "400",
+  },
+
+  // Watch Video Button
+  watchVideoButton: {
+    marginTop: 20,
+    marginHorizontal: 24,
+    backgroundColor: "#2A9D8F",
+    paddingVertical: 14,
+    borderRadius: 24,
+    alignItems: "center",
+    shadowColor: "#1E776E",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.6,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  watchVideoText: {
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: 16,
   },
 });
