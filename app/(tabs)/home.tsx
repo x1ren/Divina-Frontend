@@ -6,13 +6,14 @@ import {
   ScrollView,
   StyleSheet,
   TouchableOpacity,
-  ActivityIndicator
+  ActivityIndicator,
 } from "react-native";
 
 import MaskedView from "@react-native-masked-view/masked-view";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import RecipeCard from "../../components/RecipeCard";
 import { useFonts } from "expo-font";
+import { FlatList } from "react-native";
 
 export default function Home() {
   const [fontsLoaded] = useFonts({
@@ -21,23 +22,33 @@ export default function Home() {
     "PlusJakartaSans-Medium": require("../../assets/fonts/PlusJakartaSans-Medium.ttf"),
     "PlusJakartaSans-Regular": require("../../assets/fonts/PlusJakartaSans-Regular.ttf"),
   });
+type Recipe = {
+  id: any;
+  image: string;
+  title: string;
+  readyInMinutes: number;
+  servings: number;
+};
+
+
+
+  const [data, setData] = useState<Recipe[]>([]);
+  const [loading, setLoading] = useState(true);
+
   if (!fontsLoaded) {
     return null;
   }
 
-  const [data,setData] = useState([]);
-  const [loading, setLoading] = useState(true);
-
   async function fetchData() {
-     
-
     try {
-      const response = await fetch("http://localhost:8080/api/recipes/recommendations");
+      const response = await fetch(
+        "http://localhost:8080/api/recipes/recommendations"
+      );
       const data = await response.json();
       setData(data);
     } catch (error) {
       console.error("Error fetching data:", error);
-    }finally{
+    } finally {
       setLoading(false);
     }
   }
@@ -46,10 +57,9 @@ export default function Home() {
     fetchData();
   }, []);
 
- if (loading) {
+  if (loading) {
     return <ActivityIndicator size="large" color="blue" />;
   }
-
 
   return (
     <View style={styles.container}>
@@ -68,9 +78,7 @@ export default function Home() {
                   Good Morning
                 </Text>
               }
-            >
-              
-            </MaskedView>
+            ></MaskedView>
           </View>
           <TouchableOpacity style={styles.menuButton}>
             <FontAwesome name="bars" size={24} color="#000000" />
@@ -89,9 +97,7 @@ export default function Home() {
               Feeling hungry?{"\n"}What are we cookin' today?
             </Text>
           }
-        >
-          
-        </MaskedView>
+        ></MaskedView>
 
         <View style={styles.searchBarContainer}>
           <View style={styles.searchBar}>
@@ -175,21 +181,21 @@ export default function Home() {
                 Recommendation
               </Text>
             }
-          >
-            
-          </MaskedView>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <RecipeCard
-              imageSource={require("../../assets/images/icon.png")}
-              title="Spicy Thai Tom Yum"
-              time="30 mins"
-            />
-            <RecipeCard
-              imageSource={require("../../assets/images/icon.png")}
-              title="Creamy Mushroom Soup"
-              time="30 mins"
-            />
-          </ScrollView>
+          ></MaskedView>
+          <FlatList
+            data={data.slice(0, 5)} 
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={({ item }) => (
+              <RecipeCard
+                imageSource={{ uri: item.image }}
+                title={item.title}
+                time={`${item.readyInMinutes} mins`}
+                servings={item.servings}
+              />
+            )}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+          />
         </View>
 
         {/* Recipe of The Week Section */}
@@ -206,9 +212,7 @@ export default function Home() {
                 Recipe of The Week
               </Text>
             }
-          >
-            
-          </MaskedView>
+          ></MaskedView>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             {/* Add RecipeCard components here */}
           </ScrollView>

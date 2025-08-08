@@ -7,10 +7,12 @@ const RecipeCard = ({
   imageSource,
   title,
   time,
+  servings,
 }: {
   imageSource: any;
   title: string;
   time: string;
+  servings: number;
 }) => {
   return (
     <TouchableOpacity style={styles.card}>
@@ -35,8 +37,8 @@ const RecipeCard = ({
             <Text style={styles.statText}>4.5</Text>
           </View>
           <View style={styles.statItem}>
-            <FontAwesome name="fire" size={12} color="#FF6B6B" />
-            <Text style={styles.statText}>350 cal</Text>
+            <FontAwesome name="users" size={12} color="#4A90E2" />
+            <Text style={styles.statText}>{servings} servings</Text>
           </View>
         </View>
       </View>
