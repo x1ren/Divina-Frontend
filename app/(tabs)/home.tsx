@@ -27,11 +27,12 @@ export default function Home() {
 
   const [data,setData] = useState([]);
   const [loading, setLoading] = useState(true);
+
   async function fetchData() {
      
 
     try {
-      const response = await fetch("https://api.example.com/recipes");
+      const response = await fetch("http://localhost:8080/api/recipes/recommendations");
       const data = await response.json();
       setData(data);
     } catch (error) {
