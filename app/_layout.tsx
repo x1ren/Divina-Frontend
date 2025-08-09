@@ -5,30 +5,32 @@ import {
 } from "@react-navigation/native";
 import { useEffect } from "react";
 import "react-native-reanimated";
-import * as SplashScreen from 'expo-splash-screen';
-import { Stack } from 'expo-router';
-import React from 'react';
+import * as SplashScreen from "expo-splash-screen";
+import { Stack } from "expo-router";
+import React from "react";
 
 import { useColorScheme } from "react-native";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useFonts } from "expo-font";
-import { Text as RNText, TextProps } from 'react-native';
+import { Text as RNText, TextProps } from "react-native";
 
 export {
-  
   ErrorBoundary,
 } from "expo-router";
 
 export const unstable_settings = {
-  
   initialRouteName: "(tabs)",
 };
-
 
 SplashScreen.preventAutoHideAsync();
 
 export function AppText(props: TextProps) {
-  return <RNText {...props} style={[{ fontFamily: 'Inter_400Regular' }, props.style]} />;
+  return (
+    <RNText
+      {...props}
+      style={[{ fontFamily: "Inter_400Regular" }, props.style]}
+    />
+  );
 }
 
 export default function RootLayout() {
@@ -61,7 +63,7 @@ function RootLayoutNav() {
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: "modal" }} />
+        {/* Hides the black header for the recipes detail page */}
       </Stack>
     </ThemeProvider>
   );

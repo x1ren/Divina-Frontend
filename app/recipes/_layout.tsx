@@ -1,21 +1,10 @@
 import { Stack } from "expo-router";
-import { View } from "react-native";
 
-export default function RecipeLayout() {
+export default function Layout() {
   return (
-    <View style={{ flex: 1 }}>
-      <Stack>
-        <Stack.Screen
-          name="[id]"
-          options={{
-            headerShown: true,
-            headerTransparent: true,
-            headerTitle: "",
-            headerBackVisible: true,
-            headerTintColor: "#fff",
-          }}
-        />
-      </Stack>
-    </View>
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="index" />
+      <Stack.Screen name="recipes" />
+    </Stack>
   );
 }

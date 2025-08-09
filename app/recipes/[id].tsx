@@ -11,7 +11,7 @@ import {
   StatusBar,
   Animated,
 } from "react-native";
-import { useLocalSearchParams, router } from "expo-router";
+import { useLocalSearchParams, router, Stack } from "expo-router";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { LinearGradient } from "expo-linear-gradient";
 
@@ -101,7 +101,7 @@ export default function RecipeDetails() {
   useEffect(() => {
     async function fetchRecipeDetails() {
       try {
-        const response = await fetch(`http://localhost:8080/api/recipes/${id}`);
+        const response = await fetch(`http://192.168.254.120:8080/api/recipes/${id}`);
         if (!response.ok) throw new Error("Recipe not found");
         const data = await response.json();
         setRecipe(data);
@@ -142,13 +142,10 @@ export default function RecipeDetails() {
   }
 
   return (
+    
+    
     <View style={styles.container}>
-      <StatusBar
-        barStyle="light-content"
-        translucent
-        backgroundColor="transparent"
-      />
-
+      <Stack.Screen options={{ headerShown: false }} />
       <Animated.ScrollView
         style={styles.scrollView}
         onScroll={Animated.event(
@@ -162,16 +159,9 @@ export default function RecipeDetails() {
         <View style={styles.heroContainer}>
           <Image source={{ uri: recipe.image }} style={styles.heroImage} />
           <LinearGradient
-            colors={["transparent", "rgba(0,0,0,0.75)"]}
+            colors={["transparent", "rgba(0,0,0,0.85)"]}
             style={styles.heroGradient}
           />
-
-          {/* Back Button */}
-          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-            <View style={styles.backButtonInner}>
-              <FontAwesome name="arrow-left" size={20} color="#333" />
-            </View>
-          </TouchableOpacity>
 
           {/* Save Button */}
           <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
@@ -414,22 +404,6 @@ const styles = StyleSheet.create({
     height: "60%",
   },
   
-  backButton: {
-    position: "absolute",
-    top: (StatusBar.currentHeight || 44) + 10,
-    left: 20,
-    zIndex: 10,
-  },
-  backButtonInner: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "rgba(255,255,255,0.95)",
-    justifyContent: "center",
-    alignItems: "center",
-    elevation: 2,
-  },
-  
   saveButton: {
     position: "absolute",
     top: (StatusBar.currentHeight || 44) + 10,
@@ -618,11 +592,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#e0e0e0",
     borderLeftWidth: 4,
-    borderLeftColor: "#000",
+    borderLeftColor: "#333",
   },
   instructionItemCompleted: {
     backgroundColor: "#f0f0f0",
-    borderColor: "#000",
+    borderColor: "#333",
     opacity: 0.8,
   },
   stepHeader: {
@@ -634,7 +608,7 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: "#000",
+    backgroundColor: "#333",
     justifyContent: "center",
     alignItems: "center",
     marginRight: 12,
@@ -653,7 +627,7 @@ const styles = StyleSheet.create({
   stepLabel: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#000",
+    color: "#333",
     textTransform: "uppercase",
     letterSpacing: 0.5,
   },
@@ -674,11 +648,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     gap: 12,
     marginTop: 24,
+    bottom: 36,
+    position: "absolute",
+    left: 0,
+    right: 0,
   },
   watchVideoButton: {
     flex: 1,
     flexDirection: "row",
-    backgroundColor: "#000",
+    backgroundColor: "#333",
     paddingVertical: 16,
     borderRadius: 16,
     alignItems: "center",
@@ -700,11 +678,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 2,
-    borderColor: "#000",
+    borderColor: "#333",
     elevation: 1,
   },
   shareButtonText: {
-    color: "#000",
+    color: "#333",
     fontWeight: "700",
     fontSize: 16,
     marginLeft: 8,

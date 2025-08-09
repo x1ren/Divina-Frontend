@@ -65,7 +65,7 @@ export default function TabLayout() {
             shadowRadius: Platform.OS === "web" ? 0 : 16,
             elevation: Platform.OS === "web" ? 0 : 8,
             position: "absolute",
-            bottom: 20,
+            bottom: 35,
             left: 20,
             right: 20,
           },

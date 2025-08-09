@@ -8,9 +8,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from "react-native";
-
 import { router } from "expo-router";
-import MaskedView from "@react-native-masked-view/masked-view";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import RecipeCard from "../../components/RecipeCard";
 import { useFonts } from "expo-font";
@@ -23,6 +21,7 @@ export default function Home() {
     "PlusJakartaSans-Medium": require("../../assets/fonts/PlusJakartaSans-Medium.ttf"),
     "PlusJakartaSans-Regular": require("../../assets/fonts/PlusJakartaSans-Regular.ttf"),
   });
+
   type Recipe = {
     id: number;
     image: string;
@@ -34,18 +33,15 @@ export default function Home() {
   const [data, setData] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
 
- 
-
   async function fetchData() {
     try {
       const response = await fetch(
-        "http://localhost:8080/api/recipes/recommendations"
+        "http://192.168.254.120:8080/api/recipes/recommendations"
       );
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
-      // Ensure each item has required properties
       const validData = data.filter(
         (item: any) =>
           item &&
@@ -57,7 +53,7 @@ export default function Home() {
       setData(validData);
     } catch (error) {
       console.error("Error fetching data:", error);
-      setData([]); // Set empty array on error
+      setData([]);
     } finally {
       setLoading(false);
     }
@@ -80,38 +76,22 @@ export default function Home() {
       <View style={styles.headerContent}>
         <View style={styles.headerTop}>
           <View>
-            <MaskedView
-              style={{ height: 24 }}
-              maskElement={
-                <Text
-                  style={[
-                    styles.greeting,
-                    { fontFamily: "PlusJakartaSans-Bold" },
-                  ]}
-                >
-                  Good Morning
-                </Text>
-              }
-            ></MaskedView>
+            <Text
+              style={[styles.greeting, { fontFamily: "PlusJakartaSans-Bold" }]}
+            >
+              Good Morning
+            </Text>
           </View>
           <TouchableOpacity style={styles.menuButton}>
             <FontAwesome name="bars" size={24} color="#000000" />
           </TouchableOpacity>
         </View>
 
-        <MaskedView
-          style={{ height: 56 }}
-          maskElement={
-            <Text
-              style={[
-                styles.subtitle,
-                { fontFamily: "PlusJakartaSans-SemiBold" },
-              ]}
-            >
-              Feeling hungry?{"\n"}What are we cookin' today?
-            </Text>
-          }
-        ></MaskedView>
+        <Text
+          style={[styles.subtitle, { fontFamily: "PlusJakartaSans-SemiBold" }]}
+        >
+          Feeling hungry?{"\n"}What are we cookin' today?
+        </Text>
 
         <View style={styles.searchBarContainer}>
           <View style={styles.searchBar}>
@@ -183,24 +163,18 @@ export default function Home() {
       {/* Recommendation Section */}
       <ScrollView style={styles.scrollContainer}>
         <View style={styles.section}>
-          <MaskedView
-            style={{ height: 28 }}
-            maskElement={
-              <Text
-                style={[
-                  styles.sectionTitle,
-                  { fontFamily: "PlusJakartaSans-SemiBold" },
-                ]}
-              >
-                Recommendation
-              </Text>
-            }
-          ></MaskedView>
-            <FlatList
+          <Text
+            style={[
+              styles.sectionTitle,
+              { fontFamily: "PlusJakartaSans-SemiBold" },
+            ]}
+          >
+            Recommendation
+          </Text>
+          <FlatList
             data={data.slice(0, 5)}
             keyExtractor={(item) => item.id.toString()}
             renderItem={({ item }) => (
-             
               <RecipeCard
                 id={item.id}
                 imageSource={{ uri: item.image }}
@@ -216,19 +190,14 @@ export default function Home() {
 
         {/* Recipe of The Week Section */}
         <View style={styles.section}>
-          <MaskedView
-            style={{ height: 28 }}
-            maskElement={
-              <Text
-                style={[
-                  styles.sectionTitle,
-                  { fontFamily: "PlusJakartaSans-SemiBold" },
-                ]}
-              >
-                Recipe of The Week
-              </Text>
-            }
-          ></MaskedView>
+          <Text
+            style={[
+              styles.sectionTitle,
+              { fontFamily: "PlusJakartaSans-SemiBold" },
+            ]}
+          >
+            Recipe of The Week
+          </Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             {/* Add RecipeCard components here */}
           </ScrollView>
@@ -242,14 +211,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
-    paddingTop: 10,
-  },
-  headerContainer: {
-    paddingTop: 60,
-    paddingHorizontal: 20,
-    paddingBottom: 30,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
+    paddingTop: 30,
   },
   headerContent: {
     gap: 20,
@@ -267,11 +229,10 @@ const styles = StyleSheet.create({
     color: "#000000ff",
     opacity: 0.8,
   },
-  title: {
-    fontSize: 28,
-    fontWeight: "bold",
+  subtitle: {
+    fontSize: 20,
     color: "#000000ff",
-    marginTop: 4,
+    lineHeight: 28,
   },
   menuButton: {
     width: 45,
@@ -288,11 +249,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 3,
     elevation: 3,
-  },
-  subtitle: {
-    fontSize: 20,
-    color: "#000000ff",
-    lineHeight: 28,
   },
   searchBarContainer: {
     marginTop: 20,
