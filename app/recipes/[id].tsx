@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   StatusBar,
   Animated,
+  Platform,
 } from "react-native";
 import { useLocalSearchParams, router, Stack } from "expo-router";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
@@ -34,6 +35,105 @@ type Recipe = {
   rating: number;
 };
 
+// Memoized ingredient item component for better performance
+const IngredientItem = React.memo(({ 
+  ingredient, 
+  index, 
+  isChecked, 
+  onToggle 
+}: {
+  ingredient: { name: string; amount: number; unit: string };
+  index: number;
+  isChecked: boolean;
+  onToggle: (index: number) => void;
+}) => (
+  <TouchableOpacity
+    activeOpacity={0.6}
+    style={[
+      styles.ingredientItem,
+      isChecked && styles.ingredientItemChecked,
+    ]}
+    onPress={() => onToggle(index)}
+  >
+    <View
+      style={[
+        styles.checkbox,
+        isChecked && styles.checkboxChecked,
+      ]}
+    >
+      {isChecked && (
+        <FontAwesome name="check" size={12} color="#fff" />
+      )}
+    </View>
+    <View style={styles.ingredientContent}>
+      <Text
+        style={[
+          styles.ingredientName,
+          isChecked && styles.ingredientNameChecked,
+        ]}
+      >
+        {ingredient.name}
+      </Text>
+      <Text
+        style={[
+          styles.ingredientAmount,
+          isChecked && styles.ingredientAmountChecked,
+        ]}
+      >
+        {ingredient.amount} {ingredient.unit}
+      </Text>
+    </View>
+  </TouchableOpacity>
+));
+
+// Memoized instruction item component for better performance
+const InstructionItem = React.memo(({ 
+  step, 
+  index, 
+  isCompleted, 
+  onToggle 
+}: {
+  step: string;
+  index: number;
+  isCompleted: boolean;
+  onToggle: (index: number) => void;
+}) => (
+  <TouchableOpacity
+    activeOpacity={0.6}
+    style={[
+      styles.instructionItem,
+      isCompleted && styles.instructionItemCompleted,
+    ]}
+    onPress={() => onToggle(index)}
+  >
+    <View style={styles.stepHeader}>
+      <View
+        style={[
+          styles.stepNumber,
+          isCompleted && styles.stepNumberCompleted,
+        ]}
+      >
+        {isCompleted ? (
+          <FontAwesome name="check" size={14} color="#fff" />
+        ) : (
+          <Text style={styles.stepNumberText}>
+            {index + 1}
+          </Text>
+        )}
+      </View>
+      <Text style={styles.stepLabel}>Step {index + 1}</Text>
+    </View>
+    <Text
+      style={[
+        styles.instructionText,
+        isCompleted && styles.instructionTextCompleted,
+      ]}
+    >
+      {step}
+    </Text>
+  </TouchableOpacity>
+));
+
 export default function RecipeDetails() {
   const { id } = useLocalSearchParams();
   const [recipe, setRecipe] = useState<Recipe | null>(null);
@@ -43,60 +143,62 @@ export default function RecipeDetails() {
     "ingredients"
   );
   const [showFullDesc, setShowFullDesc] = useState(false);
-  const [checkedIngredients, setCheckedIngredients] = useState<{[key: number]: boolean}>({});
-  const [completedSteps, setCompletedSteps] = useState<{[key: number]: boolean}>({});
+  const [checkedIngredients, setCheckedIngredients] = useState<{ [key: number]: boolean }>({});
+  const [completedSteps, setCompletedSteps] = useState<{ [key: number]: boolean }>({});
 
   const saveAnim = useRef(new Animated.Value(1)).current;
   const scrollY = useRef(new Animated.Value(0)).current;
 
-  const handleSave = () => {
+  const handleSave = useCallback(() => {
     Animated.sequence([
       Animated.spring(saveAnim, { toValue: 1.3, useNativeDriver: true }),
       Animated.spring(saveAnim, { toValue: 1, useNativeDriver: true }),
     ]).start();
-    setIsSaved(!isSaved);
-  };
+    setIsSaved((prev) => !prev);
+  }, [saveAnim]);
 
-  const toggleIngredient = (index: number) => {
-    setCheckedIngredients(prev => ({
+  // Optimized toggle functions with useCallback to prevent re-renders
+  const toggleIngredient = useCallback((index: number) => {
+    setCheckedIngredients((prev) => ({
       ...prev,
-      [index]: !prev[index]
+      [index]: !prev[index],
     }));
-  };
+  }, []);
 
-  const toggleStep = (index: number) => {
-    setCompletedSteps(prev => ({
+  const toggleStep = useCallback((index: number) => {
+    setCompletedSteps((prev) => ({
       ...prev,
-      [index]: !prev[index]
+      [index]: !prev[index],
     }));
-  };
+  }, []);
 
-  // Parse instructions into steps and clean HTML tags
-  const getInstructionSteps = (instructions: string) => {
-    if (!instructions) return [];
-    
-    // First, remove all HTML tags and entities
-    const cleanInstructions = instructions
-      .replace(/<[^>]*>/g, '') // Remove HTML tags
-      .replace(/&nbsp;/g, ' ') // Replace &nbsp; with space
-      .replace(/&amp;/g, '&') // Replace &amp; with &
-      .replace(/&lt;/g, '<') // Replace &lt; with <
-      .replace(/&gt;/g, '>') // Replace &gt; with >
-      .replace(/&quot;/g, '"') // Replace &quot; with "
-      .replace(/&#39;/g, "'") // Replace &#39; with '
-      .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+  // Memoize instruction steps parsing to avoid re-computation
+  const instructionSteps = useMemo(() => {
+    if (!recipe?.instructions) return [];
+
+    const cleanInstructions = recipe.instructions
+      .replace(/<[^>]*>/g, "")
+      .replace(/&nbsp;/g, " ")
+      .replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/\s+/g, " ")
       .trim();
-    
-    // Split by periods, semicolons, or numbered lists
+
     const steps = cleanInstructions
       .split(/(?:\d+\.\s|\.\s+(?=[A-Z])|;\s+)/)
-      .filter(step => step.trim().length > 10)
-      .map(step => step.trim().replace(/^\.+/, ''));
-    
-    return steps.length > 1 ? steps : [cleanInstructions];
-  };
+      .filter((step) => step.trim().length > 10)
+      .map((step) => step.trim().replace(/^\.+/, ""));
 
-  const instructionSteps = recipe ? getInstructionSteps(recipe.instructions) : [];
+    return steps.length > 1 ? steps : [cleanInstructions];
+  }, [recipe?.instructions]);
+
+  // Memoize tab change handler
+  const handleTabChange = useCallback((tab: "ingredients" | "instructions") => {
+    setActiveTab(tab);
+  }, []);
 
   useEffect(() => {
     async function fetchRecipeDetails() {
@@ -131,10 +233,7 @@ export default function RecipeDetails() {
         <Text style={styles.errorSubtitle}>
           We couldn't find the recipe you're looking for.
         </Text>
-        <TouchableOpacity
-          style={styles.retryButton}
-          onPress={() => router.back()}
-        >
+        <TouchableOpacity style={styles.retryButton} onPress={() => router.back()}>
           <Text style={styles.retryButtonText}>Try Again</Text>
         </TouchableOpacity>
       </View>
@@ -142,12 +241,11 @@ export default function RecipeDetails() {
   }
 
   return (
-    
-    
     <View style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
       <Animated.ScrollView
         style={styles.scrollView}
+        keyboardShouldPersistTaps="handled"
         onScroll={Animated.event(
           [{ nativeEvent: { contentOffset: { y: scrollY } } }],
           { useNativeDriver: false }
@@ -186,15 +284,11 @@ export default function RecipeDetails() {
             <View style={styles.metaContainer}>
               <View style={styles.metaCard}>
                 <FontAwesome name="clock-o" size={16} color="#FF6B6B" />
-                <Text style={styles.metaText}>
-                  {recipe.readyInMinutes} min
-                </Text>
+                <Text style={styles.metaText}>{recipe.readyInMinutes} min</Text>
               </View>
               <View style={styles.metaCard}>
                 <FontAwesome name="users" size={16} color="#4ECDC4" />
-                <Text style={styles.metaText}>
-                  {recipe.servings} servings
-                </Text>
+                <Text style={styles.metaText}>{recipe.servings} servings</Text>
               </View>
               <View style={styles.metaCard}>
                 <FontAwesome name="star" size={16} color="#FFB400" />
@@ -206,7 +300,7 @@ export default function RecipeDetails() {
           </View>
         </View>
 
-        {/* Content Container */}
+        {/* Content */}
         <View style={styles.contentContainer}>
           {/* Description */}
           <View style={styles.descriptionCard}>
@@ -214,7 +308,8 @@ export default function RecipeDetails() {
               style={styles.descriptionText}
               numberOfLines={showFullDesc ? undefined : 2}
             >
-              {recipe.description || "A delicious recipe that you'll love to make and share with family and friends."}
+              {recipe.description ||
+                "A delicious recipe that you'll love to make and share with family and friends."}
             </Text>
             {!showFullDesc && (
               <TouchableOpacity onPress={() => setShowFullDesc(true)}>
@@ -228,16 +323,13 @@ export default function RecipeDetails() {
             {["ingredients", "instructions"].map((tab) => (
               <TouchableOpacity
                 key={tab}
-                style={[
-                  styles.tab,
-                  activeTab === tab && styles.activeTab,
-                ]}
-                onPress={() => setActiveTab(tab as any)}
+                style={[styles.tab, activeTab === tab && styles.activeTab]}
+                onPress={() => handleTabChange(tab as any)}
               >
-                <FontAwesome 
-                  name={tab === "ingredients" ? "list-ul" : "cutlery"} 
-                  size={16} 
-                  color={activeTab === tab ? "#fff" : "#666"} 
+                <FontAwesome
+                  name={tab === "ingredients" ? "list-ul" : "cutlery"}
+                  size={16}
+                  color={activeTab === tab ? "#fff" : "#666"}
                 />
                 <Text
                   style={[
@@ -263,40 +355,16 @@ export default function RecipeDetails() {
                     Tap to check off items
                   </Text>
                 </View>
-                
+
                 <View style={styles.ingredientsList}>
-                  {recipe.extendedIngredients?.map((ing, index) => (
-                    <TouchableOpacity 
-                      key={index} 
-                      style={[
-                        styles.ingredientItem,
-                        checkedIngredients[index] && styles.ingredientItemChecked
-                      ]}
-                      onPress={() => toggleIngredient(index)}
-                    >
-                      <View style={[
-                        styles.checkbox,
-                        checkedIngredients[index] && styles.checkboxChecked
-                      ]}>
-                        {checkedIngredients[index] && (
-                          <FontAwesome name="check" size={12} color="#fff" />
-                        )}
-                      </View>
-                      <View style={styles.ingredientContent}>
-                        <Text style={[
-                          styles.ingredientName,
-                          checkedIngredients[index] && styles.ingredientNameChecked
-                        ]}>
-                          {ing.name}
-                        </Text>
-                        <Text style={[
-                          styles.ingredientAmount,
-                          checkedIngredients[index] && styles.ingredientAmountChecked
-                        ]}>
-                          {ing.amount} {ing.unit}
-                        </Text>
-                      </View>
-                    </TouchableOpacity>
+                  {recipe.extendedIngredients?.map((ingredient, index) => (
+                    <IngredientItem
+                      key={index}
+                      ingredient={ingredient}
+                      index={index}
+                      isChecked={checkedIngredients[index] || false}
+                      onToggle={toggleIngredient}
+                    />
                   ))}
                 </View>
               </View>
@@ -310,42 +378,16 @@ export default function RecipeDetails() {
                     Follow each step carefully
                   </Text>
                 </View>
-                
+
                 <View style={styles.instructionsList}>
                   {instructionSteps.map((step, index) => (
-                    <TouchableOpacity
+                    <InstructionItem
                       key={index}
-                      style={[
-                        styles.instructionItem,
-                        completedSteps[index] && styles.instructionItemCompleted
-                      ]}
-                      onPress={() => toggleStep(index)}
-                    >
-                      <View style={styles.stepHeader}>
-                        <View style={[
-                          styles.stepNumber,
-                          completedSteps[index] && styles.stepNumberCompleted
-                        ]}>
-                          {completedSteps[index] ? (
-                            <FontAwesome name="check" size={14} color="#fff" />
-                          ) : (
-                            <Text style={[
-                              styles.stepNumberText,
-                              completedSteps[index] && styles.stepNumberTextCompleted
-                            ]}>
-                              {index + 1}
-                            </Text>
-                          )}
-                        </View>
-                        <Text style={styles.stepLabel}>Step {index + 1}</Text>
-                      </View>
-                      <Text style={[
-                        styles.instructionText,
-                        completedSteps[index] && styles.instructionTextCompleted
-                      ]}>
-                        {step}
-                      </Text>
-                    </TouchableOpacity>
+                      step={step}
+                      index={index}
+                      isCompleted={completedSteps[index] || false}
+                      onToggle={toggleStep}
+                    />
                   ))}
                 </View>
               </View>
@@ -358,7 +400,7 @@ export default function RecipeDetails() {
               <FontAwesome name="play" size={16} color="#fff" />
               <Text style={styles.watchVideoText}>Watch Video</Text>
             </TouchableOpacity>
-            
+
             <TouchableOpacity style={styles.shareButton}>
               <FontAwesome name="share-alt" size={16} color="#4ECDC4" />
               <Text style={styles.shareButtonText}>Share Recipe</Text>
