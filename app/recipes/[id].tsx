@@ -43,6 +43,8 @@ export default function RecipeDetails() {
     "ingredients"
   );
   const [showFullDesc, setShowFullDesc] = useState(false);
+  const [checkedIngredients, setCheckedIngredients] = useState<{[key: number]: boolean}>({});
+  const [completedSteps, setCompletedSteps] = useState<{[key: number]: boolean}>({});
 
   const saveAnim = useRef(new Animated.Value(1)).current;
   const scrollY = useRef(new Animated.Value(0)).current;
@@ -54,6 +56,47 @@ export default function RecipeDetails() {
     ]).start();
     setIsSaved(!isSaved);
   };
+
+  const toggleIngredient = (index: number) => {
+    setCheckedIngredients(prev => ({
+      ...prev,
+      [index]: !prev[index]
+    }));
+  };
+
+  const toggleStep = (index: number) => {
+    setCompletedSteps(prev => ({
+      ...prev,
+      [index]: !prev[index]
+    }));
+  };
+
+  // Parse instructions into steps and clean HTML tags
+  const getInstructionSteps = (instructions: string) => {
+    if (!instructions) return [];
+    
+    // First, remove all HTML tags and entities
+    const cleanInstructions = instructions
+      .replace(/<[^>]*>/g, '') // Remove HTML tags
+      .replace(/&nbsp;/g, ' ') // Replace &nbsp; with space
+      .replace(/&amp;/g, '&') // Replace &amp; with &
+      .replace(/&lt;/g, '<') // Replace &lt; with <
+      .replace(/&gt;/g, '>') // Replace &gt; with >
+      .replace(/&quot;/g, '"') // Replace &quot; with "
+      .replace(/&#39;/g, "'") // Replace &#39; with '
+      .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+      .trim();
+    
+    // Split by periods, semicolons, or numbered lists
+    const steps = cleanInstructions
+      .split(/(?:\d+\.\s|\.\s+(?=[A-Z])|;\s+)/)
+      .filter(step => step.trim().length > 10)
+      .map(step => step.trim().replace(/^\.+/, ''));
+    
+    return steps.length > 1 ? steps : [cleanInstructions];
+  };
+
+  const instructionSteps = recipe ? getInstructionSteps(recipe.instructions) : [];
 
   useEffect(() => {
     async function fetchRecipeDetails() {
@@ -123,6 +166,13 @@ export default function RecipeDetails() {
             style={styles.heroGradient}
           />
 
+          {/* Back Button */}
+          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+            <View style={styles.backButtonInner}>
+              <FontAwesome name="arrow-left" size={20} color="#333" />
+            </View>
+          </TouchableOpacity>
+
           {/* Save Button */}
           <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
             <Animated.View
@@ -145,18 +195,18 @@ export default function RecipeDetails() {
             <Text style={styles.recipeTitle}>{recipe.title}</Text>
             <View style={styles.metaContainer}>
               <View style={styles.metaCard}>
-                <FontAwesome name="clock-o" size={16} color="#444" />
+                <FontAwesome name="clock-o" size={16} color="#FF6B6B" />
                 <Text style={styles.metaText}>
                   {recipe.readyInMinutes} min
                 </Text>
               </View>
               <View style={styles.metaCard}>
-                <FontAwesome name="signal" size={16} color="#444" />
+                <FontAwesome name="users" size={16} color="#4ECDC4" />
                 <Text style={styles.metaText}>
-                  {recipe.difficulty || "Medium"}
+                  {recipe.servings} servings
                 </Text>
               </View>
-              <View style={[styles.metaCard, styles.ratingCard]}>
+              <View style={styles.metaCard}>
                 <FontAwesome name="star" size={16} color="#FFB400" />
                 <Text style={styles.metaText}>
                   {recipe.rating?.toFixed(1) || "4.7"}
@@ -166,125 +216,220 @@ export default function RecipeDetails() {
           </View>
         </View>
 
-        {/* Description */}
-        <View style={styles.descriptionContainer}>
-          <Text
-            style={styles.descriptionText}
-            numberOfLines={showFullDesc ? undefined : 3}
-          >
-            {recipe.description}
-          </Text>
-          {!showFullDesc && (
-            <TouchableOpacity onPress={() => setShowFullDesc(true)}>
-              <Text style={styles.showMoreText}>Show more</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-
-        {/* Tabs */}
-        <View style={styles.tabContainer}>
-          {["ingredients", "instructions"].map((tab) => (
-            <TouchableOpacity
-              key={tab}
-              style={[
-                styles.tab,
-                activeTab === tab && styles.activeTab,
-              ]}
-              onPress={() => setActiveTab(tab as any)}
+        {/* Content Container */}
+        <View style={styles.contentContainer}>
+          {/* Description */}
+          <View style={styles.descriptionCard}>
+            <Text
+              style={styles.descriptionText}
+              numberOfLines={showFullDesc ? undefined : 2}
             >
-              <Text
+              {recipe.description || "A delicious recipe that you'll love to make and share with family and friends."}
+            </Text>
+            {!showFullDesc && (
+              <TouchableOpacity onPress={() => setShowFullDesc(true)}>
+                <Text style={styles.showMoreText}>Read more</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {/* Tabs */}
+          <View style={styles.tabContainer}>
+            {["ingredients", "instructions"].map((tab) => (
+              <TouchableOpacity
+                key={tab}
                 style={[
-                  styles.tabText,
-                  activeTab === tab && styles.activeTabText,
+                  styles.tab,
+                  activeTab === tab && styles.activeTab,
                 ]}
+                onPress={() => setActiveTab(tab as any)}
               >
-                {tab === "ingredients" ? "Ingredients" : "Directions"}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        {/* Tab Content */}
-        <View style={styles.tabContent}>
-          {activeTab === "ingredients" ? (
-            <>
-              <Text style={styles.sectionTitle}>
-                {recipe.extendedIngredients?.length || 0} Ingredients
-              </Text>
-              <Text style={styles.sectionSubtitle}>
-                Everything you need for this recipe
-              </Text>
-              <View style={{ marginTop: 20 }}>
-                {recipe.extendedIngredients?.map((ing, index) => (
-                  <View key={index} style={styles.ingredientCard}>
-                    <View style={styles.ingredientCheckbox}>
-                      <FontAwesome name="check" size={14} color="#4ECDC4" />
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.ingredientName}>{ing.name}</Text>
-                      <Text style={styles.ingredientAmount}>
-                        {ing.amount} {ing.unit}
-                      </Text>
-                    </View>
-                  </View>
-                ))}
-              </View>
-            </>
-          ) : (
-            <>
-              <Text style={styles.sectionTitle}>How to Cook</Text>
-              <Text style={styles.sectionSubtitle}>
-                Follow these steps for the perfect result
-              </Text>
-              <View style={styles.instructionsCard}>
-                <Text style={styles.instructionsText}>
-                  {recipe.instructions}
+                <FontAwesome 
+                  name={tab === "ingredients" ? "list-ul" : "cutlery"} 
+                  size={16} 
+                  color={activeTab === tab ? "#fff" : "#666"} 
+                />
+                <Text
+                  style={[
+                    styles.tabText,
+                    activeTab === tab && styles.activeTabText,
+                  ]}
+                >
+                  {tab === "ingredients" ? "Ingredients" : "Instructions"}
                 </Text>
-              </View>
-            </>
-          )}
-        </View>
+              </TouchableOpacity>
+            ))}
+          </View>
 
-        {/* Watch Video Button */}
-        <TouchableOpacity style={styles.watchVideoButton}>
-          <Text style={styles.watchVideoText}>Watch Video</Text>
-        </TouchableOpacity>
+          {/* Tab Content */}
+          <View style={styles.tabContent}>
+            {activeTab === "ingredients" ? (
+              <View style={styles.contentCard}>
+                <View style={styles.sectionHeader}>
+                  <Text style={styles.sectionTitle}>
+                    Ingredients ({recipe.extendedIngredients?.length || 0})
+                  </Text>
+                  <Text style={styles.sectionSubtitle}>
+                    Tap to check off items
+                  </Text>
+                </View>
+                
+                <View style={styles.ingredientsList}>
+                  {recipe.extendedIngredients?.map((ing, index) => (
+                    <TouchableOpacity 
+                      key={index} 
+                      style={[
+                        styles.ingredientItem,
+                        checkedIngredients[index] && styles.ingredientItemChecked
+                      ]}
+                      onPress={() => toggleIngredient(index)}
+                    >
+                      <View style={[
+                        styles.checkbox,
+                        checkedIngredients[index] && styles.checkboxChecked
+                      ]}>
+                        {checkedIngredients[index] && (
+                          <FontAwesome name="check" size={12} color="#fff" />
+                        )}
+                      </View>
+                      <View style={styles.ingredientContent}>
+                        <Text style={[
+                          styles.ingredientName,
+                          checkedIngredients[index] && styles.ingredientNameChecked
+                        ]}>
+                          {ing.name}
+                        </Text>
+                        <Text style={[
+                          styles.ingredientAmount,
+                          checkedIngredients[index] && styles.ingredientAmountChecked
+                        ]}>
+                          {ing.amount} {ing.unit}
+                        </Text>
+                      </View>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+            ) : (
+              <View style={styles.contentCard}>
+                <View style={styles.sectionHeader}>
+                  <Text style={styles.sectionTitle}>
+                    Instructions ({instructionSteps.length} steps)
+                  </Text>
+                  <Text style={styles.sectionSubtitle}>
+                    Follow each step carefully
+                  </Text>
+                </View>
+                
+                <View style={styles.instructionsList}>
+                  {instructionSteps.map((step, index) => (
+                    <TouchableOpacity
+                      key={index}
+                      style={[
+                        styles.instructionItem,
+                        completedSteps[index] && styles.instructionItemCompleted
+                      ]}
+                      onPress={() => toggleStep(index)}
+                    >
+                      <View style={styles.stepHeader}>
+                        <View style={[
+                          styles.stepNumber,
+                          completedSteps[index] && styles.stepNumberCompleted
+                        ]}>
+                          {completedSteps[index] ? (
+                            <FontAwesome name="check" size={14} color="#fff" />
+                          ) : (
+                            <Text style={[
+                              styles.stepNumberText,
+                              completedSteps[index] && styles.stepNumberTextCompleted
+                            ]}>
+                              {index + 1}
+                            </Text>
+                          )}
+                        </View>
+                        <Text style={styles.stepLabel}>Step {index + 1}</Text>
+                      </View>
+                      <Text style={[
+                        styles.instructionText,
+                        completedSteps[index] && styles.instructionTextCompleted
+                      ]}>
+                        {step}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+            )}
+          </View>
+
+          {/* Action Buttons */}
+          <View style={styles.actionButtonsContainer}>
+            <TouchableOpacity style={styles.watchVideoButton}>
+              <FontAwesome name="play" size={16} color="#fff" />
+              <Text style={styles.watchVideoText}>Watch Video</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={styles.shareButton}>
+              <FontAwesome name="share-alt" size={16} color="#4ECDC4" />
+              <Text style={styles.shareButtonText}>Share Recipe</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
       </Animated.ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#FAFAFA" },
+  container: { flex: 1, backgroundColor: "#fff" },
   centered: { justifyContent: "center", alignItems: "center" },
   scrollView: { flex: 1 },
-  loadingText: { marginTop: 20, fontSize: 16, color: "#666" },
+  loadingText: { marginTop: 20, fontSize: 16, color: "#666", fontWeight: "500" },
 
-  errorTitle: { fontSize: 24, fontWeight: "bold", marginTop: 20 },
+  errorTitle: { fontSize: 24, fontWeight: "bold", marginTop: 20, color: "#333" },
   errorSubtitle: {
     fontSize: 16,
     color: "#666",
     textAlign: "center",
     marginVertical: 10,
+    paddingHorizontal: 32,
   },
   retryButton: {
-    backgroundColor: "#FF6B6B",
+    backgroundColor: "#333",
     paddingHorizontal: 32,
     paddingVertical: 14,
     borderRadius: 25,
-    marginTop: 10,
+    marginTop: 20,
+    elevation: 3,
   },
   retryButtonText: { color: "#fff", fontWeight: "600", fontSize: 16 },
 
-  heroContainer: { height: height * 0.45, position: "relative" },
-  heroImage: { width: "100%", height: "100%" },
+  heroContainer: { height: height * 0.4, position: "relative" },
+  heroImage: { width: "100%", height: "100%", resizeMode: "cover" },
   heroGradient: {
     position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
-    height: "100%",
+    height: "60%",
   },
+  
+  backButton: {
+    position: "absolute",
+    top: (StatusBar.currentHeight || 44) + 10,
+    left: 20,
+    zIndex: 10,
+  },
+  backButtonInner: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "rgba(255,255,255,0.95)",
+    justifyContent: "center",
+    alignItems: "center",
+    elevation: 2,
+  },
+  
   saveButton: {
     position: "absolute",
     top: (StatusBar.currentHeight || 44) + 10,
@@ -292,80 +437,158 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   saveButtonInner: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: "rgba(255,255,255,0.9)",
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "rgba(255,255,255,0.95)",
     justifyContent: "center",
     alignItems: "center",
+    elevation: 2,
   },
   saveButtonActive: { backgroundColor: "#FF6B6B" },
-  heroContent: { position: "absolute", bottom: 20, left: 20, right: 20 },
+  
+  heroContent: { position: "absolute", bottom: 24, left: 24, right: 24 },
   recipeTitle: {
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: "800",
     color: "#fff",
-    marginBottom: 12,
+    marginBottom: 16,
+    textShadowColor: "rgba(0,0,0,0.5)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
-  metaContainer: { flexDirection: "row" },
+  metaContainer: { flexDirection: "row", flexWrap: "wrap" },
   metaCard: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(255,255,255,0.9)",
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 16,
-    marginRight: 12,
+    backgroundColor: "rgba(255,255,255,0.95)",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginRight: 8,
+    marginBottom: 8,
+    elevation: 1,
   },
-  ratingCard: { backgroundColor: "#fff" },
-  metaText: { marginLeft: 6, fontSize: 14, fontWeight: "600", color: "#333" },
+  metaText: { marginLeft: 6, fontSize: 13, fontWeight: "600", color: "#333" },
 
-  descriptionContainer: { marginHorizontal: 24, marginTop: 20 },
-  descriptionText: { fontSize: 14, color: "#444", lineHeight: 20 },
-  showMoreText: { marginTop: 4, color: "#4ECDC4", fontWeight: "600" },
+  contentContainer: {
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    marginTop: -20,
+    paddingTop: 8,
+    minHeight: height * 0.6,
+  },
+
+  descriptionCard: {
+    backgroundColor: "#fff",
+    margin: 20,
+    marginBottom: 16,
+    padding: 20,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+  },
+  descriptionText: { 
+    fontSize: 15, 
+    color: "#333", 
+    lineHeight: 22,
+    fontWeight: "400"
+  },
+  showMoreText: { 
+    marginTop: 8, 
+    color: "#333", 
+    fontWeight: "600",
+    fontSize: 14
+  },
 
   tabContainer: {
     flexDirection: "row",
-    backgroundColor: "#F5F5F5",
-    marginHorizontal: 24,
-    borderRadius: 20,
+    backgroundColor: "#f5f5f5",
+    marginHorizontal: 20,
+    borderRadius: 16,
     padding: 4,
-    marginTop: 24,
+    marginBottom: 20,
   },
   tab: {
     flex: 1,
-    paddingVertical: 14,
+    flexDirection: "row",
+    paddingVertical: 12,
     alignItems: "center",
-    borderRadius: 16,
+    justifyContent: "center",
+    borderRadius: 12,
   },
   activeTab: {
-    backgroundColor: "#fff",
-    elevation: 3,
+    backgroundColor: "#333",
+    elevation: 2,
   },
-  tabText: { fontSize: 16, fontWeight: "600", color: "#666" },
-  activeTabText: { color: "#333" },
+  tabText: { 
+    marginLeft: 8,
+    fontSize: 15, 
+    fontWeight: "600", 
+    color: "#666" 
+  },
+  activeTabText: { color: "#fff" },
 
-  tabContent: { paddingHorizontal: 24, paddingBottom: 40 },
-  sectionTitle: { fontSize: 24, fontWeight: "800", color: "#333" },
-  sectionSubtitle: { fontSize: 16, color: "#666", marginTop: 4 },
+  tabContent: { paddingHorizontal: 20, paddingBottom: 100 },
+  
+  contentCard: {
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+  },
+  
+  sectionHeader: {
+    marginBottom: 20,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#e0e0e0",
+  },
+  sectionTitle: { 
+    fontSize: 22, 
+    fontWeight: "700", 
+    color: "#333",
+    marginBottom: 4,
+  },
+  sectionSubtitle: { 
+    fontSize: 14, 
+    color: "#666",
+    fontWeight: "500"
+  },
 
-  ingredientCard: {
+  // Ingredients Styles
+  ingredientsList: { gap: 12 },
+  ingredientItem: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#fff",
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 12,
+    backgroundColor: "#fafafa",
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
   },
-  ingredientCheckbox: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: "#E8F8F5",
+  ingredientItemChecked: {
+    backgroundColor: "#f0f0f0",
+    borderColor: "#333",
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: "#ccc",
     justifyContent: "center",
     alignItems: "center",
     marginRight: 16,
+    backgroundColor: "#fff",
   },
+  checkboxChecked: {
+    backgroundColor: "#333",
+    borderColor: "#333",
+  },
+  ingredientContent: { flex: 1 },
   ingredientName: {
     fontSize: 16,
     fontWeight: "600",
@@ -373,24 +596,117 @@ const styles = StyleSheet.create({
     marginBottom: 2,
     textTransform: "capitalize",
   },
-  ingredientAmount: { fontSize: 14, color: "#666" },
-
-  instructionsCard: {
-    backgroundColor: "#fff",
-    borderRadius: 20,
-    padding: 24,
-    marginTop: 20,
+  ingredientNameChecked: {
+    color: "#666",
+    textDecorationLine: "line-through",
   },
-  instructionsText: { fontSize: 16, color: "#444", lineHeight: 26 },
+  ingredientAmount: { 
+    fontSize: 13, 
+    color: "#666",
+    fontWeight: "500"
+  },
+  ingredientAmountChecked: {
+    color: "#999",
+  },
 
-  watchVideoButton: {
-    marginHorizontal: 24,
-    backgroundColor: "#2A9D8F",
-    paddingVertical: 14,
-    borderRadius: 24,
+  // Instructions Styles
+  instructionsList: { gap: 16 },
+  instructionItem: {
+    backgroundColor: "#fafafa",
+    borderRadius: 16,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
+    borderLeftWidth: 4,
+    borderLeftColor: "#000",
+  },
+  instructionItemCompleted: {
+    backgroundColor: "#f0f0f0",
+    borderColor: "#000",
+    opacity: 0.8,
+  },
+  stepHeader: {
+    flexDirection: "row",
     alignItems: "center",
-    marginBottom: 40,
-    elevation: 4,
+    marginBottom: 12,
   },
-  watchVideoText: { color: "#fff", fontWeight: "700", fontSize: 16 },
+  stepNumber: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "#000",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+  },
+  stepNumberCompleted: {
+    backgroundColor: "#666",
+  },
+  stepNumberText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#fff",
+  },
+  stepNumberTextCompleted: {
+    color: "#fff",
+  },
+  stepLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#000",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  instructionText: {
+    fontSize: 15,
+    color: "#333",
+    lineHeight: 22,
+    fontWeight: "400",
+  },
+  instructionTextCompleted: {
+    color: "#666",
+    textDecorationLine: "line-through",
+  },
+
+  // Action Buttons
+  actionButtonsContainer: {
+    flexDirection: "row",
+    paddingHorizontal: 20,
+    gap: 12,
+    marginTop: 24,
+  },
+  watchVideoButton: {
+    flex: 1,
+    flexDirection: "row",
+    backgroundColor: "#000",
+    paddingVertical: 16,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    elevation: 3,
+  },
+  watchVideoText: { 
+    color: "#fff", 
+    fontWeight: "700", 
+    fontSize: 16,
+    marginLeft: 8,
+  },
+  shareButton: {
+    flex: 1,
+    flexDirection: "row",
+    backgroundColor: "#fff",
+    paddingVertical: 16,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 2,
+    borderColor: "#000",
+    elevation: 1,
+  },
+  shareButtonText: {
+    color: "#000",
+    fontWeight: "700",
+    fontSize: 16,
+    marginLeft: 8,
+  },
 });
