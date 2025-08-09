@@ -134,16 +134,6 @@ export default function Home() {
                 { fontFamily: "PlusJakartaSans-Regular" },
               ]}
             >
-              Soup
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.categoryBtn}>
-            <Text
-              style={[
-                styles.categoryBtnText,
-                { fontFamily: "PlusJakartaSans-Regular" },
-              ]}
-            >
               Breakfast
             </Text>
           </TouchableOpacity>
@@ -154,7 +144,17 @@ export default function Home() {
                 { fontFamily: "PlusJakartaSans-Regular" },
               ]}
             >
-              Salad
+              Lunch
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.categoryBtn}>
+            <Text
+              style={[
+                styles.categoryBtnText,
+                { fontFamily: "PlusJakartaSans-Regular" },
+              ]}
+            >
+              Dinner
             </Text>
           </TouchableOpacity>
         </ScrollView>
