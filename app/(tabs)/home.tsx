@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, act } from "react";
 import {
   View,
   Text,
@@ -33,7 +33,8 @@ export default function Home() {
 
   const [data, setData] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeCategory, setActiveCategory] = useState("All"); // Add state for active category
+
+  const [activeCategory, setActiveCategory] = useState("All"); 
   
   // Animation values for each category
   const [animationValues] = useState(() => {
@@ -44,10 +45,10 @@ export default function Home() {
     return values;
   });
 
-  async function fetchData() {
+  async function fetchData(activeCategory: string) {
     try {
       const response = await fetch(
-        "http://192.168.254.120:8080/api/recipes/recommendations"
+        "http://192.168.254.120:8080/api/recipes/recommendations/{activeCategory}"
       );
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -71,7 +72,7 @@ export default function Home() {
   }
 
   useEffect(() => {
-    fetchData();
+    fetchData(activeCategory)
   }, []);
 
   const categories = ["All", "Breakfast", "Lunch", "Dinner"]; // Define categories array

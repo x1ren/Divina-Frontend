@@ -9,17 +9,39 @@ import Animated, {
   useAnimatedStyle,
   withRepeat,
   withTiming,
-  interpolateColor,
   withSequence,
 } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
-import MaskedView from "@react-native-masked-view/masked-view";
+import Svg, { Path } from "react-native-svg";
 
 const COLORS = {
   primary: "#111",
   gray: "#6b7280",
   white: "#fff",
   black: "#000",
+};
+
+// Custom curved tab bar background
+const CurvedTabBarBackground = () => {
+  return (
+    <View style={{ 
+      position: 'absolute', 
+      top: 0, 
+      left: 0, 
+      right: 0, 
+      height: 70,
+      backgroundColor: 'transparent'
+    }}>
+      <Svg width="100%" height="70" viewBox="0 0 375 70" style={{ position: 'absolute' }}>
+        <Path
+          d="M0,20 L120,20 Q140,20 150,35 Q170,60 190,60 Q210,60 230,35 Q240,20 260,20 L375,20 L375,70 L0,70 Z"
+          fill={COLORS.white}
+          stroke="#e5e7eb"
+          strokeWidth="2"
+        />
+      </Svg>
+    </View>
+  );
 };
 
 export default function TabLayout() {
@@ -52,16 +74,16 @@ export default function TabLayout() {
           tabBarInactiveTintColor: COLORS.gray,
           headerShown: false,
           tabBarStyle: {
-            backgroundColor: COLORS.white,
+            backgroundColor: 'transparent',
             borderTopWidth: 0,
             marginHorizontal: Platform.OS === "web" ? 0 : 20,
             marginBottom: Platform.OS === "web" ? 0 : 20,
-            borderRadius: Platform.OS === "web" ? 0 : 30,
+            borderRadius: 0,
             height: 70,
             shadowColor: Platform.OS === "web" ? "transparent" : "#000",
             shadowOffset:
               Platform.OS === "web" ? undefined : { width: 0, height: 8 },
-            shadowOpacity: Platform.OS === "web" ? 0 : 0.3,
+            shadowOpacity: Platform.OS === "web" ? 0 : 0.15,
             shadowRadius: Platform.OS === "web" ? 0 : 16,
             elevation: Platform.OS === "web" ? 0 : 8,
             position: "absolute",
@@ -69,16 +91,18 @@ export default function TabLayout() {
             left: 20,
             right: 20,
           },
+          tabBarBackground: () => <CurvedTabBarBackground />,
           tabBarLabelStyle: {
-            fontSize: 13,
+            fontSize: 12,
             fontWeight: "600",
             letterSpacing: 0.5,
             marginTop: 2,
           },
           tabBarItemStyle: {
-            borderRadius: 20,
-            margin: 4,
+            borderRadius: 0,
+            margin: 0,
             paddingVertical: 8,
+            paddingTop: 20, // Push icons down to accommodate curve
           },
           tabBarIconStyle: {
             marginBottom: -2,
@@ -124,28 +148,28 @@ export default function TabLayout() {
                 style={{
                   alignItems: "center",
                   justifyContent: "center",
-                  width: 58,
-                  height: 58,
-                  borderRadius: 29,
-                  marginTop: -8,
+                  width: 60,
+                  height: 60,
+                  borderRadius: 30,
+                  backgroundColor: COLORS.white,
+                  position: 'absolute',
+                  top: -15, // Elevate above the curved bar
+                  left: '50%',
+                  marginLeft: -30, // Center horizontally
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.2,
+                  shadowRadius: 8,
+                  elevation: 8,
+                  borderWidth: 3,
+                  borderColor: COLORS.white,
                 }}
               >
                 <Animated.View style={sparkleStyle}>
                   <View style={{ position: "relative" }}>
-                    <LinearGradient
-                      colors={["#87CEEB", "#4A90E2", "#1E90FF", "#0077BE"]}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 1 }}
-                      style={{
-                        position: "absolute",
-                        width: 34,
-                        height: 34,
-                        opacity: 0,
-                      }}
-                    />
                     <MaterialIcons
                       name="auto-awesome"
-                      size={34}
+                      size={28}
                       color="#4A90E2"
                     />
                   </View>
