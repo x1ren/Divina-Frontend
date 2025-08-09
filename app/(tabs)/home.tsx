@@ -7,6 +7,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
+  Animated,
 } from "react-native";
 import { router } from "expo-router";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
@@ -32,6 +33,16 @@ export default function Home() {
 
   const [data, setData] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeCategory, setActiveCategory] = useState("All"); // Add state for active category
+  
+  // Animation values for each category
+  const [animationValues] = useState(() => {
+    const values: { [key: string]: Animated.Value } = {};
+    ["All", "Breakfast", "Lunch", "Dinner"].forEach(category => {
+      values[category] = new Animated.Value(category === "All" ? 1 : 0);
+    });
+    return values;
+  });
 
   async function fetchData() {
     try {
@@ -62,6 +73,23 @@ export default function Home() {
   useEffect(() => {
     fetchData();
   }, []);
+
+  const categories = ["All", "Breakfast", "Lunch", "Dinner"]; // Define categories array
+
+  const handleCategoryPress = (category: string) => {
+    setActiveCategory(category);
+    
+    // Animate all buttons
+    Object.keys(animationValues).forEach(cat => {
+      Animated.timing(animationValues[cat], {
+        toValue: cat === category ? 1 : 0,
+        duration: 200,
+        useNativeDriver: false,
+      }).start();
+    });
+    
+    // You can add filtering logic here based on the selected category
+  };
 
   if (!fontsLoaded) {
     return null;
@@ -115,48 +143,51 @@ export default function Home() {
           showsHorizontalScrollIndicator={false}
           style={styles.categoryScroll}
         >
-          <TouchableOpacity
-            style={[styles.categoryBtn, styles.categoryBtnActive]}
-          >
-            <Text
-              style={[
-                styles.categoryBtnTextActive,
-                { fontFamily: "PlusJakartaSans-Regular" },
-              ]}
-            >
-              All
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.categoryBtn}>
-            <Text
-              style={[
-                styles.categoryBtnText,
-                { fontFamily: "PlusJakartaSans-Regular" },
-              ]}
-            >
-              Breakfast
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.categoryBtn}>
-            <Text
-              style={[
-                styles.categoryBtnText,
-                { fontFamily: "PlusJakartaSans-Regular" },
-              ]}
-            >
-              Lunch
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.categoryBtn}>
-            <Text
-              style={[
-                styles.categoryBtnText,
-                { fontFamily: "PlusJakartaSans-Regular" },
-              ]}
-            >
-              Dinner
-            </Text>
-          </TouchableOpacity>
+          {categories.map((category) => {
+            const animatedValue = animationValues[category];
+            
+            return (
+              <TouchableOpacity
+                key={category}
+                style={styles.categoryBtnContainer}
+                onPress={() => handleCategoryPress(category)}
+                activeOpacity={0.8}
+              >
+                <Animated.View
+                  style={[
+                    styles.categoryBtn,
+                    {
+                      backgroundColor: animatedValue.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: ['transparent', '#000000ff'],
+                      }),
+                      transform: [{
+                        scale: animatedValue.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [1, 1.05],
+                        })
+                      }]
+                    },
+                  ]}
+                >
+                  <Animated.Text
+                    style={[
+                      styles.categoryBtnText,
+                      { fontFamily: "PlusJakartaSans-Regular" },
+                      {
+                        color: animatedValue.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: ['#000000ff', '#fff'],
+                        }),
+                      }
+                    ]}
+                  >
+                    {category}
+                  </Animated.Text>
+                </Animated.View>
+              </TouchableOpacity>
+            );
+          })}
         </ScrollView>
       </View>
 
@@ -268,18 +299,18 @@ const styles = StyleSheet.create({
     marginTop: 15,
     paddingLeft: 5,
   },
+  categoryBtnContainer: {
+    marginRight: 12,
+  },
   categoryBtn: {
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 20,
-    backgroundColor: "transparent",
-    marginRight: 12,
   },
   categoryBtnActive: {
     backgroundColor: "#000000ff",
   },
   categoryBtnText: {
-    color: "#000000ff",
     fontSize: 14,
   },
   categoryBtnTextActive: {
