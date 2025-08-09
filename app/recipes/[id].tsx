@@ -416,12 +416,26 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#fff" },
   centered: { justifyContent: "center", alignItems: "center" },
   scrollView: { flex: 1 },
-  loadingText: { marginTop: 20, fontSize: 16, color: "#666", fontWeight: "500" },
+  loadingText: { 
+    marginTop: 20, 
+    fontSize: 16, 
+    color: "#666", 
+    fontFamily: "System",
+    fontWeight: "500" 
+  },
 
-  errorTitle: { fontSize: 24, fontWeight: "bold", marginTop: 20, color: "#333" },
+  errorTitle: { 
+    fontSize: 24, 
+    fontFamily: "System",
+    fontWeight: "800", 
+    marginTop: 20, 
+    color: "#333" 
+  },
   errorSubtitle: {
     fontSize: 16,
     color: "#666",
+    fontFamily: "System",
+    fontWeight: "400",
     textAlign: "center",
     marginVertical: 10,
     paddingHorizontal: 32,
@@ -434,7 +448,12 @@ const styles = StyleSheet.create({
     marginTop: 20,
     elevation: 3,
   },
-  retryButtonText: { color: "#fff", fontWeight: "600", fontSize: 16 },
+  retryButtonText: { 
+    color: "#fff", 
+    fontFamily: "System",
+    fontWeight: "600", 
+    fontSize: 16 
+  },
 
   heroContainer: { height: height * 0.4, position: "relative" },
   heroImage: { width: "100%", height: "100%", resizeMode: "cover" },
@@ -444,6 +463,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: "60%",
+    opacity: 100,
   },
   
   saveButton: {
@@ -466,12 +486,14 @@ const styles = StyleSheet.create({
   heroContent: { position: "absolute", bottom: 24, left: 24, right: 24 },
   recipeTitle: {
     fontSize: 26,
-    fontWeight: "800",
+    fontFamily: "Inter",
+    fontWeight: "600",
     color: "#fff",
     marginBottom: 16,
     textShadowColor: "rgba(0,0,0,0.5)",
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 3,
+    letterSpacing: -0.3,
   },
   metaContainer: { flexDirection: "row", flexWrap: "wrap" },
   metaCard: {
@@ -485,7 +507,13 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     elevation: 1,
   },
-  metaText: { marginLeft: 6, fontSize: 13, fontWeight: "600", color: "#333" },
+  metaText: { 
+    marginLeft: 6, 
+    fontSize: 13, 
+    fontFamily: "System",
+    fontWeight: "600", 
+    color: "#333" 
+  },
 
   contentContainer: {
     backgroundColor: "#fff",
@@ -509,11 +537,13 @@ const styles = StyleSheet.create({
     fontSize: 15, 
     color: "#333", 
     lineHeight: 22,
+    fontFamily: "System",
     fontWeight: "400"
   },
   showMoreText: { 
     marginTop: 8, 
     color: "#333", 
+    fontFamily: "System",
     fontWeight: "600",
     fontSize: 14
   },
@@ -541,6 +571,7 @@ const styles = StyleSheet.create({
   tabText: { 
     marginLeft: 8,
     fontSize: 15, 
+    fontFamily: "System",
     fontWeight: "600", 
     color: "#666" 
   },
@@ -564,6 +595,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: { 
     fontSize: 22, 
+    fontFamily: "System",
     fontWeight: "700", 
     color: "#333",
     marginBottom: 4,
@@ -571,6 +603,7 @@ const styles = StyleSheet.create({
   sectionSubtitle: { 
     fontSize: 14, 
     color: "#666",
+    fontFamily: "System",
     fontWeight: "500"
   },
 
@@ -607,6 +640,7 @@ const styles = StyleSheet.create({
   ingredientContent: { flex: 1 },
   ingredientName: {
     fontSize: 16,
+    fontFamily: "System",
     fontWeight: "600",
     color: "#333",
     marginBottom: 2,
@@ -619,6 +653,7 @@ const styles = StyleSheet.create({
   ingredientAmount: { 
     fontSize: 13, 
     color: "#666",
+    fontFamily: "System",
     fontWeight: "500"
   },
   ingredientAmountChecked: {
@@ -660,6 +695,7 @@ const styles = StyleSheet.create({
   },
   stepNumberText: {
     fontSize: 14,
+    fontFamily: "System",
     fontWeight: "700",
     color: "#fff",
   },
@@ -668,6 +704,7 @@ const styles = StyleSheet.create({
   },
   stepLabel: {
     fontSize: 14,
+    fontFamily: "System",
     fontWeight: "600",
     color: "#333",
     textTransform: "uppercase",
@@ -677,6 +714,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: "#333",
     lineHeight: 22,
+    fontFamily: "System",
     fontWeight: "400",
   },
   instructionTextCompleted: {
@@ -707,6 +745,7 @@ const styles = StyleSheet.create({
   },
   watchVideoText: { 
     color: "#fff", 
+    fontFamily: "System",
     fontWeight: "700", 
     fontSize: 16,
     marginLeft: 8,
@@ -725,6 +764,7 @@ const styles = StyleSheet.create({
   },
   shareButtonText: {
     color: "#333",
+    fontFamily: "System",
     fontWeight: "700",
     fontSize: 16,
     marginLeft: 8,

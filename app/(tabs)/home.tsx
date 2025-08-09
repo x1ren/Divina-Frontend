@@ -169,7 +169,7 @@ export default function Home() {
               { fontFamily: "PlusJakartaSans-SemiBold" },
             ]}
           >
-            Recommendation
+            Recipe For You
           </Text>
           <FlatList
             data={data.slice(0, 5)}
@@ -189,19 +189,7 @@ export default function Home() {
         </View>
 
         {/* Recipe of The Week Section */}
-        <View style={styles.section}>
-          <Text
-            style={[
-              styles.sectionTitle,
-              { fontFamily: "PlusJakartaSans-SemiBold" },
-            ]}
-          >
-            Recipe of The Week
-          </Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {/* Add RecipeCard components here */}
-          </ScrollView>
-        </View>
+        
       </ScrollView>
     </View>
   );

@@ -33,26 +33,24 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
       <View style={styles.imageContainer}>
         <Image source={imageSource} style={styles.cardImage} />
         <LinearGradient
-          colors={["transparent", "rgba(0,0,0,0.7)"]}
+          colors={["transparent", "rgba(0,0,0,0.8)"]}
           style={styles.gradient}
         />
+        
+        {/* Time container - top right */}
         <View style={styles.timeContainer}>
           <FontAwesome name="clock-o" size={14} color="#fff" />
           <Text style={styles.cardTime}>{time}</Text>
         </View>
-      </View>
-      <View style={styles.contentContainer}>
-        <Text style={styles.cardTitle} numberOfLines={2}>
-          {title}
-        </Text>
-        <View style={styles.statsContainer}>
-          <View style={styles.statItem}>
-            <FontAwesome name="star" size={12} color="#FFD700" />
-            <Text style={styles.statText}>4.5</Text>
-          </View>
-          <View style={styles.statItem}>
-            <FontAwesome name="users" size={12} color="#4A90E2" />
-            <Text style={styles.statText}>{servings} servings</Text>
+
+        {/* Title and servings - bottom overlay */}
+        <View style={styles.overlayContent}>
+          <Text style={styles.cardTitle} numberOfLines={2}>
+            {title}
+          </Text>
+          <View style={styles.servingsContainer}>
+            <FontAwesome name="users" size={12} color="#fff" />
+            <Text style={styles.servingsText}>{servings} servings</Text>
           </View>
         </View>
       </View>
@@ -62,23 +60,23 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    width: 200,
+    width: 280, // Made bigger (was 200)
     marginRight: 15,
     borderRadius: 16,
     backgroundColor: "#FFFFFF",
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 3,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 5,
     overflow: "hidden",
   },
   imageContainer: {
     position: "relative",
-    height: 150,
+    height: 280, // Made much taller
   },
   cardImage: {
     width: "100%",
@@ -90,45 +88,58 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    height: "50%",
+    height: "60%", // Increased gradient coverage
   },
   timeContainer: {
     position: "absolute",
-    bottom: 10,
-    right: 10,
+    top: 12,
+    right: 12,
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(0,0,0,0.5)",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  contentContainer: {
-    padding: 12,
-  },
-  cardTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#1B5E20",
-    marginBottom: 8,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 16,
   },
   cardTime: {
     fontSize: 12,
     color: "#FFFFFF",
     marginLeft: 4,
+    fontFamily: "System",
+    fontWeight: "500", // Medium weight for better readability
   },
-  statsContainer: {
-    flexDirection: "row",
-    gap: 12,
+  overlayContent: {
+    position: "absolute",
+    bottom: 16,
+    left: 16,
+    right: 16,
   },
-  statItem: {
+  cardTitle: {
+    fontSize: 18,
+    fontFamily: "System",
+    fontWeight: "600", // Semi-bold like "Cooking" in the screenshot
+    color: "#FFFFFF",
+    marginBottom: 8,
+    textShadowColor: "rgba(0,0,0,0.7)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
+    letterSpacing: -0.5, // Tighter spacing like the screenshot
+  },
+  servingsContainer: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
+    backgroundColor: "rgba(255,255,255,0.2)",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    alignSelf: "flex-start",
   },
-  statText: {
+  servingsText: {
     fontSize: 12,
-    color: "#666",
+    color: "#FFFFFF",
+    marginLeft: 4,
+    fontFamily: "System",
+    fontWeight: "500", // Medium weight to match
   },
 });
 
