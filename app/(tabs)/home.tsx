@@ -34,12 +34,12 @@ export default function Home() {
   const [data, setData] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const [activeCategory, setActiveCategory] = useState("All"); 
-  
+  const [activeCategory, setActiveCategory] = useState("All");
+
   // Animation values for each category
   const [animationValues] = useState(() => {
     const values: { [key: string]: Animated.Value } = {};
-    ["All", "Breakfast", "Lunch", "Dinner"].forEach(category => {
+    ["All", "Breakfast", "Lunch", "Dinner"].forEach((category) => {
       values[category] = new Animated.Value(category === "All" ? 1 : 0);
     });
     return values;
@@ -48,8 +48,9 @@ export default function Home() {
   async function fetchData(activeCategory: string) {
     try {
       const response = await fetch(
-        "http://192.168.254.120:8080/api/recipes/recommendations/{activeCategory}"
+        `http://192.168.254.120:8080/api/recipes/recommendations/${activeCategory}`
       );
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -72,23 +73,23 @@ export default function Home() {
   }
 
   useEffect(() => {
-    fetchData(activeCategory)
-  }, []);
+    fetchData(activeCategory);
+  }, [activeCategory]);
 
-  const categories = ["All", "Breakfast", "Lunch", "Dinner"]; // Define categories array
+  const categories = ["All", "Breakfast", "Lunch", "Dinner"]; 
 
   const handleCategoryPress = (category: string) => {
     setActiveCategory(category);
-    
+
     // Animate all buttons
-    Object.keys(animationValues).forEach(cat => {
+    Object.keys(animationValues).forEach((cat) => {
       Animated.timing(animationValues[cat], {
         toValue: cat === category ? 1 : 0,
         duration: 200,
         useNativeDriver: false,
       }).start();
     });
-    
+
     // You can add filtering logic here based on the selected category
   };
 
@@ -146,7 +147,7 @@ export default function Home() {
         >
           {categories.map((category) => {
             const animatedValue = animationValues[category];
-            
+
             return (
               <TouchableOpacity
                 key={category}
@@ -160,14 +161,16 @@ export default function Home() {
                     {
                       backgroundColor: animatedValue.interpolate({
                         inputRange: [0, 1],
-                        outputRange: ['transparent', '#000000ff'],
+                        outputRange: ["transparent", "#000000ff"],
                       }),
-                      transform: [{
-                        scale: animatedValue.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: [1, 1.05],
-                        })
-                      }]
+                      transform: [
+                        {
+                          scale: animatedValue.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [1, 1.05],
+                          }),
+                        },
+                      ],
                     },
                   ]}
                 >
@@ -178,9 +181,9 @@ export default function Home() {
                       {
                         color: animatedValue.interpolate({
                           inputRange: [0, 1],
-                          outputRange: ['#000000ff', '#fff'],
+                          outputRange: ["#000000ff", "#fff"],
                         }),
-                      }
+                      },
                     ]}
                   >
                     {category}
@@ -221,7 +224,6 @@ export default function Home() {
         </View>
 
         {/* Recipe of The Week Section */}
-        
       </ScrollView>
     </View>
   );
