@@ -48,7 +48,7 @@ export default function Home() {
   async function fetchData(activeCategory: string) {
     try {
       const response = await fetch(
-        `http://192.168.254.120:8080/api/recipes/recommendations/${activeCategory}`
+        `http://192.168.1.35:8080/api/recipes/recommendations/${activeCategory}`
       );
 
       if (!response.ok) {

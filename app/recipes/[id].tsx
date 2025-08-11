@@ -203,7 +203,7 @@ export default function RecipeDetails() {
   useEffect(() => {
     async function fetchRecipeDetails() {
       try {
-        const response = await fetch(`http://192.168.254.120:8080/api/recipes/${id}`);
+        const response = await fetch(`http://192.168.1.35:8080/api/recipes/${id}`);
         if (!response.ok) throw new Error("Recipe not found");
         const data = await response.json();
         setRecipe(data);
