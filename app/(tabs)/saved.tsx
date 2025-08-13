@@ -11,10 +11,14 @@ import {
   ImageStyle,
   TextInput,
   Animated,
+  Dimensions,
 } from "react-native";
 
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useFonts } from "expo-font";
+
+const { width } = Dimensions.get('window');
+const cardWidth = (width - 60) / 2; // 2 columns with padding
 
 type Styles = {
   container: ViewStyle;
@@ -23,6 +27,10 @@ type Styles = {
   greeting: TextStyle;
   subtitle: TextStyle;
   menuButton: ViewStyle;
+  statsContainer: ViewStyle;
+  statItem: ViewStyle;
+  statNumber: TextStyle;
+  statLabel: TextStyle;
   searchBarContainer: ViewStyle;
   searchBar: ViewStyle;
   searchInput: TextStyle;
@@ -32,20 +40,45 @@ type Styles = {
   categoryBtnText: TextStyle;
   scrollContainer: ViewStyle;
   section: ViewStyle;
+  sectionHeader: ViewStyle;
   sectionTitle: TextStyle;
-  savedSection: ViewStyle;
+  viewToggle: ViewStyle;
+  toggleButton: ViewStyle;
+  activeToggleButton: ViewStyle;
+  toggleText: TextStyle;
+  activeToggleText: TextStyle;
+  gridContainer: ViewStyle;
   recipeCard: ViewStyle;
+  recipeImageContainer: ViewStyle;
   recipeImage: ImageStyle;
+  saveIndicator: ViewStyle;
+  recipeOverlay: ViewStyle;
   recipeInfo: ViewStyle;
   recipeName: TextStyle;
   recipeMetrics: ViewStyle;
-  metricItem: ViewStyle;
+  metricBadge: ViewStyle;
   metricText: TextStyle;
-  noRecipesText: TextStyle;
+  listContainer: ViewStyle;
+  listCard: ViewStyle;
+  listImageContainer: ViewStyle;
+  listImage: ImageStyle;
+  listInfo: ViewStyle;
+  listName: TextStyle;
+  listMetrics: ViewStyle;
+  listMetricItem: ViewStyle;
+  listMetricText: TextStyle;
   emptyStateContainer: ViewStyle;
   emptyStateIcon: ViewStyle;
   emptyStateTitle: TextStyle;
   emptyStateSubtitle: TextStyle;
+  emptyStateButton: ViewStyle;
+  emptyStateButtonText: TextStyle;
+  collectionCard: ViewStyle;
+  collectionImage: ImageStyle;
+  collectionOverlay: ViewStyle;
+  collectionInfo: ViewStyle;
+  collectionName: TextStyle;
+  collectionCount: TextStyle;
 };
 
 const Saved = () => {
@@ -57,11 +90,12 @@ const Saved = () => {
   });
 
   const [activeCategory, setActiveCategory] = useState("All");
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   // Animation values for each category
   const [animationValues] = useState(() => {
     const values: { [key: string]: Animated.Value } = {};
-    ["All", "Breakfast", "Lunch", "Dinner", "Dessert"].forEach((category) => {
+    ["All", "Collections", "Recent", "Breakfast", "Lunch", "Dinner", "Dessert"].forEach((category) => {
       values[category] = new Animated.Value(category === "All" ? 1 : 0);
     });
     return values;
@@ -74,37 +108,68 @@ const Saved = () => {
   const demoRecipes = [
     {
       id: "1",
-      name: "Classic Caesar Salad",
+      name: "Crispy Chicken Tacos",
       category: "Lunch",
-      time: "20 mins",
-      calories: "350",
+      time: "25 mins",
+      difficulty: "Easy",
       rating: "4.8",
-      servings: 2,
+      servings: 4,
+      savedDate: "2 days ago",
       image: require("../../assets/images/icon.png"),
     },
     {
       id: "2",
-      name: "Fluffy Pancakes",
-      category: "Breakfast",
-      time: "25 mins",
-      calories: "420",
+      name: "Blueberry Pancakes",
+      category: "Breakfast", 
+      time: "20 mins",
+      difficulty: "Easy",
       rating: "4.9",
-      servings: 4,
+      servings: 2,
+      savedDate: "1 week ago",
       image: require("../../assets/images/icon.png"),
     },
     {
       id: "3",
-      name: "Chocolate Chip Cookies",
+      name: "Chocolate Lava Cake",
       category: "Dessert",
-      time: "35 mins",
-      calories: "280",
+      time: "45 mins",
+      difficulty: "Hard",
       rating: "4.7",
-      servings: 12,
+      servings: 6,
+      savedDate: "3 days ago",
+      image: require("../../assets/images/icon.png"),
+    },
+    {
+      id: "4",
+      name: "Mediterranean Bowl",
+      category: "Lunch",
+      time: "15 mins",
+      difficulty: "Easy",
+      rating: "4.6",
+      servings: 2,
+      savedDate: "5 days ago",
+      image: require("../../assets/images/icon.png"),
+    },
+    {
+      id: "5",
+      name: "Beef Wellington",
+      category: "Dinner",
+      time: "2 hours",
+      difficulty: "Hard",
+      rating: "4.9",
+      servings: 8,
+      savedDate: "1 week ago",
       image: require("../../assets/images/icon.png"),
     },
   ];
 
-  const categories = ["All", "Breakfast", "Lunch", "Dinner", "Dessert"];
+  const collections = [
+    { id: "1", name: "Quick & Easy", count: 12, image: require("../../assets/images/icon.png") },
+    { id: "2", name: "Date Night", count: 8, image: require("../../assets/images/icon.png") },
+    { id: "3", name: "Healthy Meals", count: 15, image: require("../../assets/images/icon.png") },
+  ];
+
+  const categories = ["All", "Collections", "Recent", "Breakfast", "Lunch", "Dinner", "Dessert"];
 
   const handleCategoryPress = (category: string) => {
     setActiveCategory(category);
@@ -122,44 +187,151 @@ const Saved = () => {
   // Filter recipes based on active category
   const filteredRecipes = activeCategory === "All" 
     ? demoRecipes 
+    : activeCategory === "Recent"
+    ? demoRecipes.sort((a, b) => new Date(b.savedDate).getTime() - new Date(a.savedDate).getTime())
     : demoRecipes.filter(recipe => recipe.category === activeCategory);
+
+  const totalSaved = demoRecipes.length;
+  const totalCollections = collections.length;
+
+  const renderGridCard = (recipe: any) => (
+    <TouchableOpacity key={recipe.id} style={styles.recipeCard} activeOpacity={0.9}>
+      <View style={styles.recipeImageContainer}>
+        <Image source={recipe.image} style={styles.recipeImage} />
+        <View style={styles.saveIndicator}>
+          <FontAwesome name="heart" size={12} color="#fff" />
+        </View>
+        <View style={styles.recipeOverlay}>
+          <View style={styles.metricBadge}>
+            <FontAwesome name="star" size={10} color="#FFD700" />
+            <Text style={[styles.metricText, { fontFamily: "PlusJakartaSans-Medium" }]}>
+              {recipe.rating}
+            </Text>
+          </View>
+        </View>
+      </View>
+      <View style={styles.recipeInfo}>
+        <Text style={[styles.recipeName, { fontFamily: "PlusJakartaSans-SemiBold" }]} numberOfLines={2}>
+          {recipe.name}
+        </Text>
+        <View style={styles.recipeMetrics}>
+          <Text style={[styles.metricText, { fontFamily: "PlusJakartaSans-Regular" }]}>
+            {recipe.time} • {recipe.difficulty}
+          </Text>
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
+
+  const renderListCard = (recipe: any) => (
+    <TouchableOpacity key={recipe.id} style={styles.listCard} activeOpacity={0.8}>
+      <View style={styles.listImageContainer}>
+        <Image source={recipe.image} style={styles.listImage} />
+        <View style={styles.saveIndicator}>
+          <FontAwesome name="heart" size={10} color="#fff" />
+        </View>
+      </View>
+      <View style={styles.listInfo}>
+        <Text style={[styles.listName, { fontFamily: "PlusJakartaSans-SemiBold" }]}>
+          {recipe.name}
+        </Text>
+        <View style={styles.listMetrics}>
+          <View style={styles.listMetricItem}>
+            <FontAwesome name="clock-o" size={12} color="#9E9E9E" />
+            <Text style={[styles.listMetricText, { fontFamily: "PlusJakartaSans-Regular" }]}>
+              {recipe.time}
+            </Text>
+          </View>
+          <View style={styles.listMetricItem}>
+            <FontAwesome name="star" size={12} color="#FFD700" />
+            <Text style={[styles.listMetricText, { fontFamily: "PlusJakartaSans-Regular" }]}>
+              {recipe.rating}
+            </Text>
+          </View>
+          <Text style={[styles.listMetricText, { fontFamily: "PlusJakartaSans-Regular", opacity: 0.6 }]}>
+            Saved {recipe.savedDate}
+          </Text>
+        </View>
+      </View>
+      <TouchableOpacity style={{ padding: 8 }}>
+        <FontAwesome name="ellipsis-v" size={16} color="#9E9E9E" />
+      </TouchableOpacity>
+    </TouchableOpacity>
+  );
+
+  const renderCollectionCard = (collection: any) => (
+    <TouchableOpacity key={collection.id} style={styles.collectionCard} activeOpacity={0.9}>
+      <Image source={collection.image} style={styles.collectionImage} />
+      <View style={styles.collectionOverlay}>
+        <View style={styles.collectionInfo}>
+          <Text style={[styles.collectionName, { fontFamily: "PlusJakartaSans-SemiBold" }]}>
+            {collection.name}
+          </Text>
+          <Text style={[styles.collectionCount, { fontFamily: "PlusJakartaSans-Regular" }]}>
+            {collection.count} recipes
+          </Text>
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
 
   return (
     <View style={styles.container}>
-      {/* Header matching Home tab style */}
+      {/* Header */}
       <View style={styles.headerContent}>
         <View style={styles.headerTop}>
           <View>
-            <Text
-              style={[styles.greeting, { fontFamily: "PlusJakartaSans-Bold" }]}
-            >
-              Your Favorites
+            <Text style={[styles.greeting, { fontFamily: "PlusJakartaSans-Bold" }]}>
+              My Kitchen
             </Text>
           </View>
           <TouchableOpacity style={styles.menuButton}>
-            <FontAwesome name="heart" size={24} color="#FF6B6B" />
+            <FontAwesome name="plus" size={20} color="#4A90E2" />
           </TouchableOpacity>
         </View>
 
-        <Text
-          style={[styles.subtitle, { fontFamily: "PlusJakartaSans-SemiBold" }]}
-        >
-          Saved recipes for{"\n"}your cooking adventures
+        <Text style={[styles.subtitle, { fontFamily: "PlusJakartaSans-SemiBold" }]}>
+          Your culinary collection{"\n"}organized just the way you like it
         </Text>
+
+        {/* Stats */}
+        <View style={styles.statsContainer}>
+          <View style={styles.statItem}>
+            <Text style={[styles.statNumber, { fontFamily: "PlusJakartaSans-Bold" }]}>
+              {totalSaved}
+            </Text>
+            <Text style={[styles.statLabel, { fontFamily: "PlusJakartaSans-Regular" }]}>
+              Saved
+            </Text>
+          </View>
+          <View style={styles.statItem}>
+            <Text style={[styles.statNumber, { fontFamily: "PlusJakartaSans-Bold" }]}>
+              {totalCollections}
+            </Text>
+            <Text style={[styles.statLabel, { fontFamily: "PlusJakartaSans-Regular" }]}>
+              Collections
+            </Text>
+          </View>
+          <View style={styles.statItem}>
+            <Text style={[styles.statNumber, { fontFamily: "PlusJakartaSans-Bold" }]}>
+              4.8
+            </Text>
+            <Text style={[styles.statLabel, { fontFamily: "PlusJakartaSans-Regular" }]}>
+              Avg Rating
+            </Text>
+          </View>
+        </View>
 
         <View style={styles.searchBarContainer}>
           <View style={styles.searchBar}>
-            <FontAwesome name="search" size={20} color="#9E9E9E" />
+            <FontAwesome name="search" size={18} color="#9E9E9E" />
             <TextInput
-              style={[
-                styles.searchInput,
-                { fontFamily: "PlusJakartaSans-Regular" },
-              ]}
-              placeholder="Search saved recipes..."
+              style={[styles.searchInput, { fontFamily: "PlusJakartaSans-Regular" }]}
+              placeholder="Search your saved recipes..."
               placeholderTextColor="#9E9E9E"
             />
             <TouchableOpacity>
-              <FontAwesome name="sliders" size={20} color="#4A90E2" />
+              <FontAwesome name="filter" size={18} color="#4A90E2" />
             </TouchableOpacity>
           </View>
         </View>
@@ -187,14 +359,6 @@ const Saved = () => {
                         inputRange: [0, 1],
                         outputRange: ["transparent", "#000000ff"],
                       }),
-                      transform: [
-                        {
-                          scale: animatedValue.interpolate({
-                            inputRange: [0, 1],
-                            outputRange: [1, 1.05],
-                          }),
-                        },
-                      ],
                     },
                   ]}
                 >
@@ -220,84 +384,70 @@ const Saved = () => {
       </View>
 
       {/* Content Section */}
-      <ScrollView style={styles.scrollContainer}>
-        <View style={styles.section}>
-          <Text
-            style={[
-              styles.sectionTitle,
-              { fontFamily: "PlusJakartaSans-SemiBold" },
-            ]}
-          >
-            Saved Recipes ({filteredRecipes.length})
-          </Text>
-
-          {filteredRecipes.length > 0 ? (
-            <View style={styles.savedSection}>
-              {filteredRecipes.map((recipe) => (
-                <TouchableOpacity key={recipe.id} style={styles.recipeCard} activeOpacity={0.8}>
-                  <Image source={recipe.image} style={styles.recipeImage} />
-                  <View style={styles.recipeInfo}>
-                    <Text
-                      style={[styles.recipeName, { fontFamily: "PlusJakartaSans-SemiBold" }]}
-                    >
-                      {recipe.name}
-                    </Text>
-                    <View style={styles.recipeMetrics}>
-                      <View style={styles.metricItem}>
-                        <FontAwesome name="clock-o" size={14} color="#9E9E9E" />
-                        <Text
-                          style={[
-                            styles.metricText,
-                            { fontFamily: "PlusJakartaSans-Regular" },
-                          ]}
-                        >
-                          {recipe.time}
-                        </Text>
-                      </View>
-                      <View style={styles.metricItem}>
-                        <FontAwesome name="users" size={14} color="#4A90E2" />
-                        <Text
-                          style={[
-                            styles.metricText,
-                            { fontFamily: "PlusJakartaSans-Regular" },
-                          ]}
-                        >
-                          {recipe.servings} servings
-                        </Text>
-                      </View>
-                      <View style={styles.metricItem}>
-                        <FontAwesome name="star" size={14} color="#FFD700" />
-                        <Text
-                          style={[
-                            styles.metricText,
-                            { fontFamily: "PlusJakartaSans-Regular" },
-                          ]}
-                        >
-                          {recipe.rating}
-                        </Text>
-                      </View>
-                    </View>
-                  </View>
-                  <TouchableOpacity style={{ padding: 12 }}>
-                    <FontAwesome name="heart" size={20} color="#FF6B6B" />
-                  </TouchableOpacity>
+      <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+        {activeCategory === "Collections" ? (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={[styles.sectionTitle, { fontFamily: "PlusJakartaSans-SemiBold" }]}>
+                Recipe Collections
+              </Text>
+            </View>
+            <View style={styles.gridContainer}>
+              {collections.map(renderCollectionCard)}
+            </View>
+          </View>
+        ) : (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={[styles.sectionTitle, { fontFamily: "PlusJakartaSans-SemiBold" }]}>
+                {activeCategory === "All" ? "All Recipes" : activeCategory} ({filteredRecipes.length})
+              </Text>
+              <View style={styles.viewToggle}>
+                <TouchableOpacity
+                  style={[styles.toggleButton, viewMode === 'grid' && styles.activeToggleButton]}
+                  onPress={() => setViewMode('grid')}
+                >
+                  <FontAwesome name="th" size={14} color={viewMode === 'grid' ? "#fff" : "#9E9E9E"} />
                 </TouchableOpacity>
-              ))}
-            </View>
-          ) : (
-            <View style={styles.emptyStateContainer}>
-              <View style={styles.emptyStateIcon}>
-                <FontAwesome name="heart-o" size={48} color="#9E9E9E" />
+                <TouchableOpacity
+                  style={[styles.toggleButton, viewMode === 'list' && styles.activeToggleButton]}
+                  onPress={() => setViewMode('list')}
+                >
+                  <FontAwesome name="list" size={14} color={viewMode === 'list' ? "#fff" : "#9E9E9E"} />
+                </TouchableOpacity>
               </View>
-              <Text style={[styles.emptyStateTitle, { fontFamily: "PlusJakartaSans-SemiBold" }]}>
-                No saved recipes yet
-              </Text>
-              <Text style={[styles.emptyStateSubtitle, { fontFamily: "PlusJakartaSans-Regular" }]}>
-                Start exploring recipes and save your favorites to see them here
-              </Text>
             </View>
-          )}
-        </View>
+
+            {filteredRecipes.length > 0 ? (
+              viewMode === 'grid' ? (
+                <View style={styles.gridContainer}>
+                  {filteredRecipes.map(renderGridCard)}
+                </View>
+              ) : (
+                <View style={styles.listContainer}>
+                  {filteredRecipes.map(renderListCard)}
+                </View>
+              )
+            ) : (
+              <View style={styles.emptyStateContainer}>
+                <View style={styles.emptyStateIcon}>
+                  <FontAwesome name="heart-o" size={48} color="#9E9E9E" />
+                </View>
+                <Text style={[styles.emptyStateTitle, { fontFamily: "PlusJakartaSans-SemiBold" }]}>
+                  No saved recipes yet
+                </Text>
+                <Text style={[styles.emptyStateSubtitle, { fontFamily: "PlusJakartaSans-Regular" }]}>
+                  Discover amazing recipes and start building your personal cookbook
+                </Text>
+                <TouchableOpacity style={styles.emptyStateButton}>
+                  <Text style={[styles.emptyStateButtonText, { fontFamily: "PlusJakartaSans-SemiBold" }]}>
+                    Explore Recipes
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+        )}
       </ScrollView>
     </View>
   );
@@ -338,128 +488,223 @@ const styles = StyleSheet.create<Styles>({
     justifyContent: "center",
     alignItems: "center",
     shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 3,
     elevation: 3,
   },
+  statsContainer: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    backgroundColor: "#f8f9fa",
+    borderRadius: 16,
+    paddingVertical: 20,
+    marginTop: 10,
+  },
+  statItem: {
+    alignItems: "center",
+  },
+  statNumber: {
+    fontSize: 24,
+    color: "#000000ff",
+    marginBottom: 4,
+  },
+  statLabel: {
+    fontSize: 12,
+    color: "#9E9E9E",
+  },
   searchBarContainer: {
-    marginTop: 20,
-    marginBottom: 10,
+    marginTop: 10,
   },
   searchBar: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#fff",
     paddingHorizontal: 15,
-    paddingVertical: 14,
+    paddingVertical: 12,
     borderRadius: 12,
     gap: 10,
     shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
   },
   searchInput: {
     flex: 1,
-    fontSize: 16,
+    fontSize: 15,
     color: "#424242",
   },
   categoryScroll: {
-    marginTop: 15,
     paddingLeft: 5,
   },
   categoryBtnContainer: {
     marginRight: 12,
   },
   categoryBtn: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
     borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "#e0e0e0",
   },
   categoryBtnText: {
-    fontSize: 14,
+    fontSize: 13,
   },
   scrollContainer: {
     flex: 1,
-    marginTop: 20,
+    marginTop: 15,
     paddingBottom: 100,
   },
   section: {
-    marginTop: 25,
     paddingHorizontal: 20,
-    marginBottom: 15,
+    paddingTop: 20,
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 20,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: "600",
-    marginBottom: 20,
     color: "#000000ff",
   },
-  savedSection: {
+  viewToggle: {
+    flexDirection: "row",
+    backgroundColor: "#f0f0f0",
+    borderRadius: 8,
+    padding: 2,
+  },
+  toggleButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  activeToggleButton: {
+    backgroundColor: "#000000ff",
+  },
+  toggleText: {
+    fontSize: 12,
+    color: "#9E9E9E",
+  },
+  activeToggleText: {
+    fontSize: 12,
+    color: "#fff",
+  },
+  gridContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
     gap: 15,
   },
   recipeCard: {
-    flexDirection: "row",
+    width: cardWidth,
     backgroundColor: "#fff",
     borderRadius: 16,
     overflow: "hidden",
+    marginBottom: 10,
     shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
-    alignItems: "center",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  recipeImageContainer: {
+    position: "relative",
   },
   recipeImage: {
-    width: 80,
-    height: 80,
+    width: "100%",
+    height: cardWidth * 0.8,
     resizeMode: "cover",
+  },
+  saveIndicator: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    backgroundColor: "#FF6B6B",
     borderRadius: 12,
-    margin: 12,
+    width: 24,
+    height: 24,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  recipeOverlay: {
+    position: "absolute",
+    bottom: 8,
+    left: 8,
   },
   recipeInfo: {
-    flex: 1,
     padding: 12,
-    paddingLeft: 0,
-    justifyContent: "space-between",
   },
   recipeName: {
-    fontSize: 16,
-    fontWeight: "600",
+    fontSize: 14,
     color: "#000000ff",
-    marginBottom: 8,
+    marginBottom: 6,
+    lineHeight: 20,
   },
   recipeMetrics: {
-    flexDirection: "row",
-    justifyContent: "flex-start",
-    alignItems: "center",
-    gap: 15,
+    marginTop: 4,
   },
-  metricItem: {
+  metricBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.7)",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
+  },
+  metricText: {
+    fontSize: 11,
+    color: "#fff",
+  },
+  listContainer: {
+    gap: 12,
+  },
+  listCard: {
+    flexDirection: "row",
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 12,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  listImageContainer: {
+    position: "relative",
+    marginRight: 12,
+  },
+  listImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 8,
+    resizeMode: "cover",
+  },
+  listInfo: {
+    flex: 1,
+  },
+  listName: {
+    fontSize: 15,
+    color: "#000000ff",
+    marginBottom: 6,
+  },
+  listMetrics: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  listMetricItem: {
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
   },
-  metricText: {
-    fontSize: 12,
+  listMetricText: {
+    fontSize: 11,
     color: "#9E9E9E",
-  },
-  noRecipesText: {
-    fontSize: 16,
-    color: "#9E9E9E",
-    textAlign: "center",
-    marginTop: 20,
   },
   emptyStateContainer: {
     alignItems: "center",
@@ -468,7 +713,7 @@ const styles = StyleSheet.create<Styles>({
   },
   emptyStateIcon: {
     marginBottom: 20,
-    opacity: 0.5,
+    opacity: 0.3,
   },
   emptyStateTitle: {
     fontSize: 18,
@@ -481,6 +726,53 @@ const styles = StyleSheet.create<Styles>({
     color: "#9E9E9E",
     textAlign: "center",
     lineHeight: 20,
+    marginBottom: 30,
+  },
+  emptyStateButton: {
+    backgroundColor: "#000000ff",
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 24,
+  },
+  emptyStateButtonText: {
+    color: "#fff",
+    fontSize: 14,
+  },
+  collectionCard: {
+    width: cardWidth,
+    height: cardWidth * 0.7,
+    borderRadius: 16,
+    overflow: "hidden",
+    marginBottom: 15,
+    position: "relative",
+  },
+  collectionImage: {
+    width: "100%",
+    height: "100%",
+    resizeMode: "cover",
+  },
+  collectionOverlay: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: "50%",
+    background: "linear-gradient(transparent, rgba(0,0,0,0.7))",
+    backgroundColor: "rgba(0,0,0,0.4)",
+    justifyContent: "flex-end",
+  },
+  collectionInfo: {
+    padding: 15,
+  },
+  collectionName: {
+    fontSize: 16,
+    color: "#fff",
+    marginBottom: 4,
+  },
+  collectionCount: {
+    fontSize: 12,
+    color: "#fff",
+    opacity: 0.8,
   },
 });
 
