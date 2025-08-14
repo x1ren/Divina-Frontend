@@ -757,7 +757,7 @@ const styles = StyleSheet.create<Styles>({
     left: 0,
     right: 0,
     height: "50%",
-    background: "linear-gradient(transparent, rgba(0,0,0,0.7))",
+
     backgroundColor: "rgba(0,0,0,0.4)",
     justifyContent: "flex-end",
   },
