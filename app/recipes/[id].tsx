@@ -238,7 +238,7 @@ export default function RecipeDetails() {
           body: JSON.stringify({
             id: id,
             title: recipe?.title ?? "",
-            description: recipe?.description ?? "",
+            imageUrl: recipe?.image ?? "",
           }),
         });
       }
