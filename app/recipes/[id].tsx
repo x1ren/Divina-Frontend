@@ -218,7 +218,19 @@ export default function RecipeDetails() {
 
     try {
       if (!isSaved) {
-        await fetch(`http://192.168.1.35:8080/saved/save/${id}`, {
+        await fetch(`http://192.168.1.35:8080/saved/save/${1}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            id: id,
+            title: recipe?.title ?? "",
+            description: recipe?.description ?? "",
+          }),
+        });
+      }else{
+        await fetch(`http://192.168.1.35:8080/saved/unsave/${1}`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -230,7 +242,10 @@ export default function RecipeDetails() {
           }),
         });
       }
-    } catch (error) {}
+    } catch (error) {
+
+
+    }
   }, [saveAnim]);
 
 
