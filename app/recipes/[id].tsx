@@ -1,4 +1,10 @@
-import React, { useEffect, useState, useRef, useCallback, useMemo } from "react";
+import React, {
+  useEffect,
+  useState,
+  useRef,
+  useCallback,
+  useMemo,
+} from "react";
 import {
   View,
   Text,
@@ -36,103 +42,92 @@ type Recipe = {
 };
 
 // Memoized ingredient item component for better performance
-const IngredientItem = React.memo(({ 
-  ingredient, 
-  index, 
-  isChecked, 
-  onToggle 
-}: {
-  ingredient: { name: string; amount: number; unit: string };
-  index: number;
-  isChecked: boolean;
-  onToggle: (index: number) => void;
-}) => (
-  <TouchableOpacity
-    activeOpacity={0.6}
-    style={[
-      styles.ingredientItem,
-      isChecked && styles.ingredientItemChecked,
-    ]}
-    onPress={() => onToggle(index)}
-  >
-    <View
-      style={[
-        styles.checkbox,
-        isChecked && styles.checkboxChecked,
-      ]}
+const IngredientItem = React.memo(
+  ({
+    ingredient,
+    index,
+    isChecked,
+    onToggle,
+  }: {
+    ingredient: { name: string; amount: number; unit: string };
+    index: number;
+    isChecked: boolean;
+    onToggle: (index: number) => void;
+  }) => (
+    <TouchableOpacity
+      activeOpacity={0.6}
+      style={[styles.ingredientItem, isChecked && styles.ingredientItemChecked]}
+      onPress={() => onToggle(index)}
     >
-      {isChecked && (
-        <FontAwesome name="check" size={12} color="#fff" />
-      )}
-    </View>
-    <View style={styles.ingredientContent}>
-      <Text
-        style={[
-          styles.ingredientName,
-          isChecked && styles.ingredientNameChecked,
-        ]}
-      >
-        {ingredient.name}
-      </Text>
-      <Text
-        style={[
-          styles.ingredientAmount,
-          isChecked && styles.ingredientAmountChecked,
-        ]}
-      >
-        {ingredient.amount} {ingredient.unit}
-      </Text>
-    </View>
-  </TouchableOpacity>
-));
+      <View style={[styles.checkbox, isChecked && styles.checkboxChecked]}>
+        {isChecked && <FontAwesome name="check" size={12} color="#fff" />}
+      </View>
+      <View style={styles.ingredientContent}>
+        <Text
+          style={[
+            styles.ingredientName,
+            isChecked && styles.ingredientNameChecked,
+          ]}
+        >
+          {ingredient.name}
+        </Text>
+        <Text
+          style={[
+            styles.ingredientAmount,
+            isChecked && styles.ingredientAmountChecked,
+          ]}
+        >
+          {ingredient.amount} {ingredient.unit}
+        </Text>
+      </View>
+    </TouchableOpacity>
+  )
+);
 
 // Memoized instruction item component for better performance
-const InstructionItem = React.memo(({ 
-  step, 
-  index, 
-  isCompleted, 
-  onToggle 
-}: {
-  step: string;
-  index: number;
-  isCompleted: boolean;
-  onToggle: (index: number) => void;
-}) => (
-  <TouchableOpacity
-    activeOpacity={0.6}
-    style={[
-      styles.instructionItem,
-      isCompleted && styles.instructionItemCompleted,
-    ]}
-    onPress={() => onToggle(index)}
-  >
-    <View style={styles.stepHeader}>
-      <View
+const InstructionItem = React.memo(
+  ({
+    step,
+    index,
+    isCompleted,
+    onToggle,
+  }: {
+    step: string;
+    index: number;
+    isCompleted: boolean;
+    onToggle: (index: number) => void;
+  }) => (
+    <TouchableOpacity
+      activeOpacity={0.6}
+      style={[
+        styles.instructionItem,
+        isCompleted && styles.instructionItemCompleted,
+      ]}
+      onPress={() => onToggle(index)}
+    >
+      <View style={styles.stepHeader}>
+        <View
+          style={[styles.stepNumber, isCompleted && styles.stepNumberCompleted]}
+        >
+          {isCompleted ? (
+            <FontAwesome name="check" size={14} color="#fff" />
+          ) : (
+            <Text style={styles.stepNumberText}>{index + 1}</Text>
+          )}
+        </View>
+        <Text style={styles.stepLabel}>Step {index + 1}</Text>
+      </View>
+      <Text
         style={[
-          styles.stepNumber,
-          isCompleted && styles.stepNumberCompleted,
+          styles.instructionText,
+          isCompleted && styles.instructionTextCompleted,
         ]}
       >
-        {isCompleted ? (
-          <FontAwesome name="check" size={14} color="#fff" />
-        ) : (
-          <Text style={styles.stepNumberText}>
-            {index + 1}
-          </Text>
-        )}
-      </View>
-      <Text style={styles.stepLabel}>Step {index + 1}</Text>
-    </View>
-    <Text
-      style={[
-        styles.instructionText,
-        isCompleted && styles.instructionTextCompleted,
-      ]}
-    >
-      {step}
-    </Text>
-  </TouchableOpacity>
-));
+        {step}
+      </Text>
+    </TouchableOpacity>
+  )
+);
 
 export default function RecipeDetails() {
   const { id } = useLocalSearchParams();
@@ -143,19 +138,16 @@ export default function RecipeDetails() {
     "ingredients"
   );
   const [showFullDesc, setShowFullDesc] = useState(false);
-  const [checkedIngredients, setCheckedIngredients] = useState<{ [key: number]: boolean }>({});
-  const [completedSteps, setCompletedSteps] = useState<{ [key: number]: boolean }>({});
+  const [checkedIngredients, setCheckedIngredients] = useState<{
+    [key: number]: boolean;
+  }>({});
+  const [completedSteps, setCompletedSteps] = useState<{
+    [key: number]: boolean;
+  }>({});
 
   const saveAnim = useRef(new Animated.Value(1)).current;
   const scrollY = useRef(new Animated.Value(0)).current;
 
-  const handleSave = useCallback(() => {
-    Animated.sequence([
-      Animated.spring(saveAnim, { toValue: 1.3, useNativeDriver: true }),
-      Animated.spring(saveAnim, { toValue: 1, useNativeDriver: true }),
-    ]).start();
-    setIsSaved((prev) => !prev);
-  }, [saveAnim]);
 
   // Optimized toggle functions with useCallback to prevent re-renders
   const toggleIngredient = useCallback((index: number) => {
@@ -203,7 +195,9 @@ export default function RecipeDetails() {
   useEffect(() => {
     async function fetchRecipeDetails() {
       try {
-        const response = await fetch(`http://192.168.1.35:8080/api/recipes/${id}`);
+        const response = await fetch(
+          `http://192.168.1.35:8080/api/recipes/${id}`
+        );
         if (!response.ok) throw new Error("Recipe not found");
         const data = await response.json();
         setRecipe(data);
@@ -215,6 +209,30 @@ export default function RecipeDetails() {
     }
     fetchRecipeDetails();
   }, [id]);
+    const handleSave = useCallback(async () => {
+    Animated.sequence([
+      Animated.spring(saveAnim, { toValue: 1.3, useNativeDriver: true }),
+      Animated.spring(saveAnim, { toValue: 1, useNativeDriver: true }),
+    ]).start();
+    setIsSaved((prev) => !prev);
+
+    try {
+      if (!isSaved) {
+        await fetch(`http://192.168.1.35:8080/saved/save/${id}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            id: id,
+            title: recipe?.title ?? "",
+            description: recipe?.description ?? "",
+          }),
+        });
+      }
+    } catch (error) {}
+  }, [saveAnim]);
+
 
   if (loading) {
     return (
@@ -233,7 +251,10 @@ export default function RecipeDetails() {
         <Text style={styles.errorSubtitle}>
           We couldn't find the recipe you're looking for.
         </Text>
-        <TouchableOpacity style={styles.retryButton} onPress={() => router.back()}>
+        <TouchableOpacity
+          style={styles.retryButton}
+          onPress={() => router.back()}
+        >
           <Text style={styles.retryButtonText}>Try Again</Text>
         </TouchableOpacity>
       </View>
@@ -416,20 +437,20 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#fff" },
   centered: { justifyContent: "center", alignItems: "center" },
   scrollView: { flex: 1 },
-  loadingText: { 
-    marginTop: 20, 
-    fontSize: 16, 
-    color: "#666", 
+  loadingText: {
+    marginTop: 20,
+    fontSize: 16,
+    color: "#666",
     fontFamily: "System",
-    fontWeight: "500" 
+    fontWeight: "500",
   },
 
-  errorTitle: { 
-    fontSize: 24, 
+  errorTitle: {
+    fontSize: 24,
     fontFamily: "System",
-    fontWeight: "800", 
-    marginTop: 20, 
-    color: "#333" 
+    fontWeight: "800",
+    marginTop: 20,
+    color: "#333",
   },
   errorSubtitle: {
     fontSize: 16,
@@ -448,11 +469,11 @@ const styles = StyleSheet.create({
     marginTop: 20,
     elevation: 3,
   },
-  retryButtonText: { 
-    color: "#fff", 
+  retryButtonText: {
+    color: "#fff",
     fontFamily: "System",
-    fontWeight: "600", 
-    fontSize: 16 
+    fontWeight: "600",
+    fontSize: 16,
   },
 
   heroContainer: { height: height * 0.4, position: "relative" },
@@ -465,7 +486,7 @@ const styles = StyleSheet.create({
     height: "60%",
     opacity: 100,
   },
-  
+
   saveButton: {
     position: "absolute",
     top: (StatusBar.currentHeight || 44) + 10,
@@ -482,7 +503,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   saveButtonActive: { backgroundColor: "#FF6B6B" },
-  
+
   heroContent: { position: "absolute", bottom: 24, left: 24, right: 24 },
   recipeTitle: {
     fontSize: 26,
@@ -507,12 +528,12 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     elevation: 1,
   },
-  metaText: { 
-    marginLeft: 6, 
-    fontSize: 13, 
+  metaText: {
+    marginLeft: 6,
+    fontSize: 13,
     fontFamily: "System",
-    fontWeight: "600", 
-    color: "#333" 
+    fontWeight: "600",
+    color: "#333",
   },
 
   contentContainer: {
@@ -533,19 +554,19 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#e0e0e0",
   },
-  descriptionText: { 
-    fontSize: 15, 
-    color: "#333", 
+  descriptionText: {
+    fontSize: 15,
+    color: "#333",
     lineHeight: 22,
     fontFamily: "System",
-    fontWeight: "400"
+    fontWeight: "400",
   },
-  showMoreText: { 
-    marginTop: 8, 
-    color: "#333", 
+  showMoreText: {
+    marginTop: 8,
+    color: "#333",
     fontFamily: "System",
     fontWeight: "600",
-    fontSize: 14
+    fontSize: 14,
   },
 
   tabContainer: {
@@ -568,17 +589,17 @@ const styles = StyleSheet.create({
     backgroundColor: "#333",
     elevation: 2,
   },
-  tabText: { 
+  tabText: {
     marginLeft: 8,
-    fontSize: 15, 
+    fontSize: 15,
     fontFamily: "System",
-    fontWeight: "600", 
-    color: "#666" 
+    fontWeight: "600",
+    color: "#666",
   },
   activeTabText: { color: "#fff" },
 
   tabContent: { paddingHorizontal: 20, paddingBottom: 100 },
-  
+
   contentCard: {
     backgroundColor: "#fff",
     borderRadius: 20,
@@ -586,25 +607,25 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#e0e0e0",
   },
-  
+
   sectionHeader: {
     marginBottom: 20,
     paddingBottom: 16,
     borderBottomWidth: 1,
     borderBottomColor: "#e0e0e0",
   },
-  sectionTitle: { 
-    fontSize: 22, 
+  sectionTitle: {
+    fontSize: 22,
     fontFamily: "System",
-    fontWeight: "700", 
+    fontWeight: "700",
     color: "#333",
     marginBottom: 4,
   },
-  sectionSubtitle: { 
-    fontSize: 14, 
+  sectionSubtitle: {
+    fontSize: 14,
     color: "#666",
     fontFamily: "System",
-    fontWeight: "500"
+    fontWeight: "500",
   },
 
   // Ingredients Styles
@@ -650,11 +671,11 @@ const styles = StyleSheet.create({
     color: "#666",
     textDecorationLine: "line-through",
   },
-  ingredientAmount: { 
-    fontSize: 13, 
+  ingredientAmount: {
+    fontSize: 13,
     color: "#666",
     fontFamily: "System",
-    fontWeight: "500"
+    fontWeight: "500",
   },
   ingredientAmountChecked: {
     color: "#999",
@@ -743,10 +764,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     elevation: 3,
   },
-  watchVideoText: { 
-    color: "#fff", 
+  watchVideoText: {
+    color: "#fff",
     fontFamily: "System",
-    fontWeight: "700", 
+    fontWeight: "700",
     fontSize: 16,
     marginLeft: 8,
   },
