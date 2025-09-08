@@ -21,7 +21,7 @@ import {
 import { useLocalSearchParams, router, Stack } from "expo-router";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { LinearGradient } from "expo-linear-gradient";
-
+import { useQueryClient } from "@tanstack/react-query";
 const { width, height } = Dimensions.get("window");
 
 type Recipe = {
@@ -147,7 +147,8 @@ export default function RecipeDetails() {
 
   const saveAnim = useRef(new Animated.Value(1)).current;
   const scrollY = useRef(new Animated.Value(0)).current;
-
+  const url = "192.168.1.35:8080";
+  const queryClient = useQueryClient();
 
   // Optimized toggle functions with useCallback to prevent re-renders
   const toggleIngredient = useCallback((index: number) => {
@@ -195,9 +196,7 @@ export default function RecipeDetails() {
   useEffect(() => {
     async function fetchRecipeDetails() {
       try {
-        const response = await fetch(
-          `http://192.168.1.35:8080/api/recipes/${id}`
-        );
+        const response = await fetch(`http://${url}/api/recipes/${id}`);
         if (!response.ok) throw new Error("Recipe not found");
         const data = await response.json();
         setRecipe(data);
@@ -209,45 +208,75 @@ export default function RecipeDetails() {
     }
     fetchRecipeDetails();
   }, [id]);
-    const handleSave = useCallback(async () => {
+  useEffect(() => {
+    const queryKey = ["savedRecipes"];
+    const savedList = queryClient.getQueryData<Recipe[]>(queryKey) || [];
+    const alreadySaved = savedList.some((r) => String(r.id) === String(id));
+    setIsSaved(alreadySaved);
+  }, [id, queryClient]);
+  const handleSave = useCallback(async () => {
     Animated.sequence([
       Animated.spring(saveAnim, { toValue: 1.3, useNativeDriver: true }),
       Animated.spring(saveAnim, { toValue: 1, useNativeDriver: true }),
     ]).start();
-    setIsSaved((prev) => !prev);
+
+    const nextSaved = !isSaved;
+    setIsSaved(nextSaved);
+
+    // Minimal recipe shape for the saved list
+    const savedRecipe = {
+      id: Number(id),
+      title: recipe?.title ?? "",
+      readyInMinutes: recipe?.readyInMinutes,
+      rating: recipe?.rating,
+      image: recipe?.image,
+    };
+
+    // Optimistic React Query cache update with cancellation and rollback
+    const queryKey = ["savedRecipes"];
+    // cancel any in-flight queries for this key so they don't overwrite our optimistic change
+    await queryClient.cancelQueries({ queryKey });
+    const previous = queryClient.getQueryData<Recipe[]>(queryKey);
+
+    // set optimistic value
+    queryClient.setQueryData<Recipe[]>(queryKey, (old = []) => {
+      if (nextSaved) {
+        if (old.some((r) => String(r.id) === String(id))) return old;
+        return [savedRecipe as any, ...old];
+      }
+      return old.filter((r) => String(r.id) !== String(id));
+    });
 
     try {
-      if (!isSaved) {
-        await fetch(`http://192.168.1.35:8080/saved/save/${1}`, {
+      if (nextSaved) {
+        await fetch(`http://${url}/api/save/1`, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            id: id,
-            title: recipe?.title ?? "",
-            description: recipe?.description ?? "",
-          }),
-        });
-      }else{
-        await fetch(`http://192.168.1.35:8080/saved/unsave/${1}`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            id: id,
+            id: Number(id),
             title: recipe?.title ?? "",
             imageUrl: recipe?.image ?? "",
+            instructions: recipe?.instructions ?? "",
+            descriptions: recipe?.description ?? "",
           }),
         });
+      } else {
+        await fetch(`http://${url}/api/unsave/1`, {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: Number(id) }),
+        });
       }
+
+      // NOTE: intentionally not invalidating immediately to avoid overwriting optimistic change
+      // We keep optimistic state and will let background refetch or screen mount revalidate later.
     } catch (error) {
-
-
+      console.error("Save/Unsave failed:", error);
+      // rollback optimistic update
+      queryClient.setQueryData<Recipe[] | undefined>(queryKey, previous as any);
+      setIsSaved(!nextSaved);
     }
-  }, [saveAnim]);
-
+  }, [isSaved, id, recipe, saveAnim, queryClient]);
 
   if (loading) {
     return (
@@ -584,6 +613,54 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
 
+  /* Added missing styles referenced by components */
+  contentCard: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: "#e6e6e6",
+  },
+  sectionHeader: {
+    marginBottom: 12,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#333",
+  },
+  sectionSubtitle: {
+    fontSize: 13,
+    color: "#666",
+  },
+  ingredientsList: {
+    gap: 12,
+  },
+  ingredientItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fafafa",
+    borderRadius: 12,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: "#eaeaea",
+  },
+  ingredientItemChecked: {
+    backgroundColor: "#f0f0f0",
+    borderColor: "#ccc",
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: "#ccc",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+    backgroundColor: "#fff",
+  },
+
   tabContainer: {
     flexDirection: "row",
     backgroundColor: "#f5f5f5",
@@ -615,60 +692,6 @@ const styles = StyleSheet.create({
 
   tabContent: { paddingHorizontal: 20, paddingBottom: 100 },
 
-  contentCard: {
-    backgroundColor: "#fff",
-    borderRadius: 20,
-    padding: 20,
-    borderWidth: 1,
-    borderColor: "#e0e0e0",
-  },
-
-  sectionHeader: {
-    marginBottom: 20,
-    paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: "#e0e0e0",
-  },
-  sectionTitle: {
-    fontSize: 22,
-    fontFamily: "System",
-    fontWeight: "700",
-    color: "#333",
-    marginBottom: 4,
-  },
-  sectionSubtitle: {
-    fontSize: 14,
-    color: "#666",
-    fontFamily: "System",
-    fontWeight: "500",
-  },
-
-  // Ingredients Styles
-  ingredientsList: { gap: 12 },
-  ingredientItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#fafafa",
-    borderRadius: 12,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: "#e0e0e0",
-  },
-  ingredientItemChecked: {
-    backgroundColor: "#f0f0f0",
-    borderColor: "#333",
-  },
-  checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: "#ccc",
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 16,
-    backgroundColor: "#fff",
-  },
   checkboxChecked: {
     backgroundColor: "#333",
     borderColor: "#333",

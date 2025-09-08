@@ -3,7 +3,7 @@ import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useRouter } from "expo-router";
-
+import { useQueryClient } from "@tanstack/react-query";
 type RecipeCardProps = {
   id: string | number;
   imageSource: any;
@@ -20,6 +20,9 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
   servings,
 }) => {
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const savedList = queryClient.getQueryData<any[]>(["savedRecipes"]) || [];
+  const isSaved = savedList.some((r) => String(r.id) === String(id));
 
   const handlePress = () => {
     router.push({
@@ -36,7 +39,14 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
           colors={["transparent", "rgba(0,0,0,0.8)"]}
           style={styles.gradient}
         />
-        
+
+        {/* ✅ Saved heart badge - top left */}
+        {isSaved && (
+          <View style={styles.savedBadge}>
+            <FontAwesome name="heart" size={14} color="#FF6B6B" />
+          </View>
+        )}
+
         {/* Time container - top right */}
         <View style={styles.timeContainer}>
           <FontAwesome name="clock-o" size={14} color="#fff" />
@@ -57,7 +67,6 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
     </TouchableOpacity>
   );
 };
-
 const styles = StyleSheet.create({
   card: {
     width: 280, // Made bigger (was 200)
@@ -140,6 +149,15 @@ const styles = StyleSheet.create({
     marginLeft: 4,
     fontFamily: "System",
     fontWeight: "500", // Medium weight to match
+  },
+  savedBadge: {
+    position: "absolute",
+    top: 12,
+    left: 12,
+    backgroundColor: "rgba(255,255,255,0.9)",
+    borderRadius: 12,
+    padding: 6,
+    elevation: 3,
   },
 });
 

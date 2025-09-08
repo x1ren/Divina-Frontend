@@ -7,6 +7,7 @@ import { useEffect } from "react";
 import "react-native-reanimated";
 import * as SplashScreen from "expo-splash-screen";
 import { Stack } from "expo-router";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import React from "react";
 
 import { useColorScheme } from "react-native";
@@ -14,9 +15,7 @@ import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useFonts } from "expo-font";
 import { Text as RNText, TextProps } from "react-native";
 
-export {
-  ErrorBoundary,
-} from "expo-router";
+export { ErrorBoundary } from "expo-router";
 
 export const unstable_settings = {
   initialRouteName: "(tabs)",
@@ -58,13 +57,17 @@ export default function RootLayout() {
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
+  const queryClientRef = React.useRef<QueryClient | null>(null);
+  if (!queryClientRef.current) queryClientRef.current = new QueryClient();
 
   return (
-    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        {/* Hides the black header for the recipes detail page */}
-      </Stack>
-    </ThemeProvider>
+    <QueryClientProvider client={queryClientRef.current}>
+      <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+        <Stack>
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          {/* Hides the black header for the recipes detail page */}
+        </Stack>
+      </ThemeProvider>
+    </QueryClientProvider>
   );
 }

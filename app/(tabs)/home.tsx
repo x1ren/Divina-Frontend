@@ -33,6 +33,7 @@ export default function Home() {
 
   const [data, setData] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
+  const url = "192.168.1.35:8080";
 
   const [activeCategory, setActiveCategory] = useState("All");
 
@@ -48,7 +49,7 @@ export default function Home() {
   async function fetchData(activeCategory: string) {
     try {
       const response = await fetch(
-        `http://192.168.1.35:8080/api/recipes/recommendations/${activeCategory}`
+        `http://${url}/api/recipes/recommendations/${activeCategory}`
       );
 
       if (!response.ok) {
