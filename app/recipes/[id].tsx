@@ -196,18 +196,33 @@ export default function RecipeDetails() {
   useEffect(() => {
     async function fetchRecipeDetails() {
       try {
-        const response = await fetch(`http://${url}/api/recipes/${id}`);
-        if (!response.ok) throw new Error("Recipe not found");
-        const data = await response.json();
-        setRecipe(data);
+        console.log("Fetching recipe details for ID:", id);
+        const fetchDb = await fetch(`http://${url}/api/db/${id}`);
+        let dbData = null;
+
+        if (fetchDb.ok) {
+          const text = await fetchDb.text(); 
+          dbData = text ? JSON.parse(text) : null; 
+        }
+
+        if (dbData) {
+          setRecipe(dbData);
+        } else {
+          const response = await fetch(`http://${url}/api/recipes/${id}`);
+          if (!response.ok) throw new Error("Recipe not found");
+          const data = await response.json();
+          setRecipe(data);
+        }
       } catch (error) {
         console.error("Error fetching recipe details:", error);
       } finally {
         setLoading(false);
       }
     }
+
     fetchRecipeDetails();
   }, [id]);
+
   useEffect(() => {
     const queryKey = ["savedRecipes"];
     const savedList = queryClient.getQueryData<Recipe[]>(queryKey) || [];
@@ -256,10 +271,11 @@ export default function RecipeDetails() {
             id: Number(id),
             title: recipe?.title ?? "",
             image: recipe?.image ?? "",
+            instructions: recipe?.instructions ?? "",
+            extendedIngredients: recipe?.extendedIngredients ?? [],
             readyInMinutes: recipe?.readyInMinutes ?? 0,
             servings: recipe?.servings ?? 0,
-            instructions: recipe?.instructions ?? "",
-            descriptions: recipe?.description ?? "",
+            
           }),
         });
       } else {
