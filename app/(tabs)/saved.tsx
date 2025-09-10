@@ -183,24 +183,47 @@ const Saved = () => {
     });
   };
 
-  // Map API recipe categories to display categories
-  const mapRecipeCategory = (recipe: Recipe): CategoryFilter => {
-    if (!recipe.category) return "All";
-    const categoryMap: { [key: string]: CategoryFilter } = {
-      'breakfast': 'Breakfast',
-      'lunch': 'Lunch', 
-      'dinner': 'Dinner',
-      'snack': 'Dessert' // Map snack to Dessert for display
-    };
-    return categoryMap[recipe.category] || "All";
-  };
+  // FIXED: Better category filtering logic
+  const getFilteredRecipes = (): Recipe[] => {
+  if (activeCategory === "All") return recipes;
+  if (activeCategory === "Recent") return [...recipes].sort((a, b) => b.id - a.id);
+  if (activeCategory === "Collections") return [];
 
-  // Filter recipes based on active category
-  const filteredRecipes = activeCategory === "All" 
-    ? recipes 
-    : activeCategory === "Recent"
-    ? [...recipes].sort((a, b) => b.id - a.id) // Sort by ID as proxy for recency
-    : recipes.filter(recipe => mapRecipeCategory(recipe) === activeCategory);
+  // Normalize category for comparison
+  return recipes.filter(recipe => {
+    if (!recipe.category) return false;
+    const normalizedCategory = recipe.category.toLowerCase();
+    switch (activeCategory) {
+      case "Breakfast": return normalizedCategory === "breakfast";
+      case "Lunch": return normalizedCategory === "lunch";
+      case "Dinner": return normalizedCategory === "dinner";
+      case "Dessert": return normalizedCategory === "snack";
+      default: return false;
+    }
+  });
+};
+
+
+  const filteredRecipes = getFilteredRecipes();
+
+  // Enhanced stats calculation
+  const getCategoryCount = (category: CategoryFilter): number => {
+    if (category === "All") return recipes.length;
+    if (category === "Collections") return collections.length;
+    if (category === "Recent") return recipes.length;
+    
+    return recipes.filter(recipe => {
+      if (!recipe.category) return false;
+      const recipeCategory = recipe.category.toLowerCase();
+      switch (category) {
+        case "Breakfast": return recipeCategory === "breakfast";
+        case "Lunch": return recipeCategory === "lunch";
+        case "Dinner": return recipeCategory === "dinner";
+        case "Dessert": return recipeCategory === "snack";
+        default: return false;
+      }
+    }).length;
+  };
 
   const totalSaved = recipes.length;
   const totalCollections = collections.length;
@@ -263,7 +286,7 @@ const Saved = () => {
             </Text>
           </View>
           <Text style={[styles.listMetricText, { fontFamily: "PlusJakartaSans-Regular", opacity: 0.6 }]}>
-            Saved recently
+            {recipe.category ? recipe.category.charAt(0).toUpperCase() + recipe.category.slice(1) : "Saved recently"}
           </Text>
         </View>
       </View>
@@ -304,6 +327,8 @@ const Saved = () => {
 
   return (
     <View style={styles.container}>
+      
+      
       {/* Header */}
       <View style={styles.headerContent}>
         <View style={styles.headerTop}>
@@ -366,6 +391,8 @@ const Saved = () => {
         >
           {categories.map((category) => {
             const animatedValue = animationValues[category];
+            const categoryCount = getCategoryCount(category);
+            
             return (
               <TouchableOpacity
                 key={category}
@@ -396,7 +423,7 @@ const Saved = () => {
                       },
                     ]}
                   >
-                    {category}
+                    {category} {categoryCount > 0 && category !== "Collections" ? `(${categoryCount})` : ""}
                   </Animated.Text>
                 </Animated.View>
               </TouchableOpacity>
@@ -458,7 +485,10 @@ const Saved = () => {
                   No {activeCategory !== "All" ? activeCategory.toLowerCase() + " " : ""}recipes yet
                 </Text>
                 <Text style={[styles.emptyStateSubtitle, { fontFamily: "PlusJakartaSans-Regular" }]}>
-                  Discover amazing recipes and start building your personal cookbook
+                  {activeCategory === "All" 
+                    ? "Discover amazing recipes and start building your personal cookbook"
+                    : `Save some ${activeCategory.toLowerCase()} recipes to see them here`
+                  }
                 </Text>
                 <TouchableOpacity style={styles.emptyStateButton}>
                   <Text style={[styles.emptyStateButtonText, { fontFamily: "PlusJakartaSans-SemiBold" }]}>

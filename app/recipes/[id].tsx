@@ -39,6 +39,7 @@ type Recipe = {
   description: string;
   difficulty: string;
   rating: number;
+  category: string;
 };
 
 // Memoized ingredient item component for better performance
