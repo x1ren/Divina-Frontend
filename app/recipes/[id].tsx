@@ -130,7 +130,7 @@ const InstructionItem = React.memo(
 );
 
 export default function RecipeDetails() {
-  const { id } = useLocalSearchParams();
+   const { id, category } = useLocalSearchParams();
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [loading, setLoading] = useState(true);
   const [isSaved, setIsSaved] = useState(false);
@@ -275,6 +275,7 @@ export default function RecipeDetails() {
             extendedIngredients: recipe?.extendedIngredients ?? [],
             readyInMinutes: recipe?.readyInMinutes ?? 0,
             servings: recipe?.servings ?? 0,
+            category: category ?? "All",
             
           }),
         });

@@ -10,6 +10,7 @@ type RecipeCardProps = {
   title: string;
   time: string;
   servings: number;
+  category: string;
 };
 
 const RecipeCard: React.FC<RecipeCardProps> = ({
@@ -18,6 +19,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
   title,
   time,
   servings,
+  category,
 }) => {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -27,7 +29,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({
   const handlePress = () => {
     router.push({
       pathname: "/recipes/[id]",
-      params: { id: id.toString() },
+      params: { id: id.toString(), category:  category.toString() },
     });
   };
 

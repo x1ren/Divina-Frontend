@@ -217,6 +217,7 @@ export default function Home() {
                 title={item.title}
                 time={`${item.readyInMinutes} mins`}
                 servings={item.servings}
+                category={activeCategory}
               />
             )}
             horizontal
