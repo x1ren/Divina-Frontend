@@ -95,7 +95,7 @@ type Styles = {
   loadingText: TextStyle;
 };
 
-const url = "192.168.1.35:8080";
+const url = "192.168.254.120:8080";
 
 const fetchSavedRecipes = async (): Promise<Recipe[]> => {
   const res = await fetch(`http://${url}/api/save/recipes/1`);

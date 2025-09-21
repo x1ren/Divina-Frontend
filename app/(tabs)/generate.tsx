@@ -41,7 +41,7 @@ export default function GenerateScreen() {
   const [ingredients, setIngredients] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [generatedPrompt, setGeneratedPrompt] = useState<string | null>(null);
-  const url = "192.168.1.35:8080";
+  const url = "192.168.254.120:8080";
   const handleGenerateRecipe = async () => {
     if (!ingredients.trim()) return;
 

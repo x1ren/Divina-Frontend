@@ -148,7 +148,7 @@ export default function RecipeDetails() {
 
   const saveAnim = useRef(new Animated.Value(1)).current;
   const scrollY = useRef(new Animated.Value(0)).current;
-  const url = "192.168.1.35:8080";
+  const url = "192.168.254.120:8080";
   const queryClient = useQueryClient();
 
   // Optimized toggle functions with useCallback to prevent re-renders

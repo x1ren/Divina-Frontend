@@ -1,4 +1,4 @@
-import React, { useState, useEffect, act } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -31,10 +31,21 @@ export default function Home() {
     servings: number;
   };
 
-  const [data, setData] = useState<Recipe[]>([]);
-  const [loading, setLoading] = useState(true);
-  const url = "192.168.1.35:8080";
+  type SearchSuggestion = {
+    id: number;
+    title: string;
+    type: string; // 'recipe', 'ingredient', 'cuisine'
+  };
 
+  const [data, setData] = useState<Recipe[]>([]);
+  const [searchResults, setSearchResults] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchSuggestions, setSearchSuggestions] = useState<SearchSuggestion[]>([]);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+  
+  const url = "192.168.254.120:8080";
   const [activeCategory, setActiveCategory] = useState("All");
 
   // Animation values for each category
@@ -45,6 +56,9 @@ export default function Home() {
     });
     return values;
   });
+
+ 
+ 
 
   async function fetchData(activeCategory: string) {
     try {
@@ -64,6 +78,7 @@ export default function Home() {
           typeof item.readyInMinutes === "number" &&
           typeof item.servings === "number"
       );
+      
       setData(validData);
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -73,14 +88,87 @@ export default function Home() {
     }
   }
 
+  // Fetch search suggestions
+  async function fetchSearchSuggestions(query: string) {
+    if (query.length < 2) {
+      setSearchSuggestions([]);
+      setShowDropdown(false);
+      return;
+    }
+
+    setLoadingSuggestions(true);
+    
+    try {
+      const response = await fetch(`http://${url}/api/recipes/search?query=${encodeURIComponent(query)}`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const titlesList = await response.json(); // This is List<String> from your backend
+      
+      // Convert string titles to SearchSuggestion objects
+      const suggestions = titlesList.map((title: string, index: number) => ({
+        id: index + 1,
+        title: title,
+        type: "recipe"
+      }));
+      
+      setSearchSuggestions(suggestions);
+      setShowDropdown(suggestions.length > 0);
+    } catch (error) {
+      console.error("Error fetching suggestions:", error);
+      setSearchSuggestions([]);
+      setShowDropdown(false);
+    } finally {
+      setLoadingSuggestions(false);
+    }
+  }
+
+  // Perform search
+  //async function performSearch(query: string) {
+  //  if (!query.trim()) return;
+//
+  //  setLoading(true);
+  //  
+  //  try {
+  //    const response = await fetch(`http://${url}/api/recipes/search?q=${encodeURIComponent(query)}`);
+  //    
+  //    if (!response.ok) {
+  //      throw new Error(`HTTP error! status: ${response.status}`);
+  //    }
+  //    
+  //    const recipeTitles = await response.json(); // List<String>
+  //    setSearchResults(recipeTitles);
+  //    setActiveCategory("Search Results");
+  //  } catch (error) {
+  //    console.error("Error performing search:", error);
+  //    setSearchResults([]);
+  //  } finally {
+  //    setLoading(false);
+  //    setShowDropdown(false);
+  //  }
+  //}
+
   useEffect(() => {
     fetchData(activeCategory);
   }, [activeCategory]);
 
-  const categories = ["All", "Breakfast", "Lunch", "Dinner"]; 
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      fetchSearchSuggestions(searchQuery);
+    }, 300); // Debounce search
+
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery]);
+
+  const categories = ["All", "Breakfast", "Lunch", "Dinner"];
 
   const handleCategoryPress = (category: string) => {
     setActiveCategory(category);
+    setSearchQuery(""); // Clear search when selecting category
+    setSearchResults([]); // Clear search results
+    setShowDropdown(false);
 
     // Animate all buttons
     Object.keys(animationValues).forEach((cat) => {
@@ -90,8 +178,31 @@ export default function Home() {
         useNativeDriver: false,
       }).start();
     });
+  };
 
-    // You can add filtering logic here based on the selected category
+  const handleSuggestionPress = (suggestion: SearchSuggestion) => {
+    setSearchQuery(suggestion.title);
+    setShowDropdown(false);
+   // performSearch(suggestion.title);
+  };
+
+  const handleSearchSubmit = () => {
+    if (searchQuery.trim()) {
+     // performSearch(searchQuery);
+    }
+  };
+
+  const getSuggestionIcon = (type: string) => {
+    switch (type) {
+      case 'recipe':
+        return 'cutlery';
+      case 'ingredient':
+        return 'leaf';
+      case 'cuisine':
+        return 'globe';
+      default:
+        return 'search';
+    }
   };
 
   if (!fontsLoaded) {
@@ -99,7 +210,14 @@ export default function Home() {
   }
 
   if (loading) {
-    return <ActivityIndicator size="large" color="blue" />;
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#4A90E2" />
+        <Text style={[styles.loadingText, { fontFamily: "PlusJakartaSans-Regular" }]}>
+          {activeCategory === "Search Results" ? "Searching recipes..." : "Loading recipes..."}
+        </Text>
+      </View>
+    );
   }
 
   return (
@@ -134,11 +252,65 @@ export default function Home() {
               ]}
               placeholder="Search any recipe..."
               placeholderTextColor="#9E9E9E"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              onSubmitEditing={handleSearchSubmit}
+              returnKeyType="search"
             />
             <TouchableOpacity>
               <FontAwesome name="sliders" size={20} color="#4A90E2" />
             </TouchableOpacity>
           </View>
+          
+          {/* Dropdown Suggestions */}
+          {showDropdown && (
+            <View style={styles.dropdownContainer}>
+              {loadingSuggestions ? (
+                <View style={styles.dropdownLoading}>
+                  <ActivityIndicator size="small" color="#4A90E2" />
+                  <Text style={[styles.loadingText, { fontFamily: "PlusJakartaSans-Regular" }]}>
+                    Loading suggestions...
+                  </Text>
+                </View>
+              ) : (
+                <ScrollView 
+                  style={styles.dropdownScroll}
+                  keyboardShouldPersistTaps="always"
+                  showsVerticalScrollIndicator={false}
+                >
+                  {searchSuggestions.map((suggestion) => (
+                    <TouchableOpacity
+                      key={suggestion.id}
+                      style={styles.suggestionItem}
+                      onPress={() => handleSuggestionPress(suggestion)}
+                    >
+                      <FontAwesome 
+                        name={getSuggestionIcon(suggestion.type)} 
+                        size={16} 
+                        color="#9E9E9E" 
+                      />
+                      <Text 
+                        style={[
+                          styles.suggestionText,
+                          { fontFamily: "PlusJakartaSans-Regular" }
+                        ]}
+                      >
+                        {suggestion.title}
+                      </Text>
+                      <Text 
+                        style={[
+                          styles.suggestionType,
+                          { fontFamily: "PlusJakartaSans-Regular" }
+                        ]}
+                      >
+                        {suggestion.type}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              )}
+            </View>
+          )}
         </View>
 
         <ScrollView
@@ -196,7 +368,7 @@ export default function Home() {
         </ScrollView>
       </View>
 
-      {/* Recommendation Section */}
+      {/* Recommendation/Search Results Section */}
       <ScrollView style={styles.scrollContainer}>
         <View style={styles.section}>
           <Text
@@ -205,27 +377,69 @@ export default function Home() {
               { fontFamily: "PlusJakartaSans-SemiBold" },
             ]}
           >
-            Recipe For You
+            {activeCategory === "Search Results" 
+              ? `Search Results for "${searchQuery}"` 
+              : "Recipe For You"}
           </Text>
-          <FlatList
-            data={data.slice(0, 5)}
-            keyExtractor={(item) => item.id.toString()}
-            renderItem={({ item }) => (
-              <RecipeCard
-                id={item.id}
-                imageSource={{ uri: item.image }}
-                title={item.title}
-                time={`${item.readyInMinutes} mins`}
-                servings={item.servings}
-                category={activeCategory}
+          
+          {activeCategory === "Search Results" ? (
+            // Show search results as simple list
+            searchResults.length > 0 ? (
+              <ScrollView showsVerticalScrollIndicator={false}>
+                {searchResults.map((title, index) => (
+                  <TouchableOpacity 
+                    key={index} 
+                    style={styles.searchResultItem}
+                    onPress={() => {
+                      // Handle recipe selection - you can navigate or do something here
+                      console.log("Selected recipe:", title);
+                    }}
+                  >
+                    <FontAwesome name="cutlery" size={18} color="#4A90E2" />
+                    <Text style={[styles.searchResultText, { fontFamily: "PlusJakartaSans-Regular" }]}>
+                      {title}
+                    </Text>
+                    <FontAwesome name="chevron-right" size={14} color="#9E9E9E" />
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            ) : (
+              <View style={styles.noResults}>
+                <FontAwesome name="search" size={48} color="#E0E0E0" />
+                <Text style={[styles.noResultsText, { fontFamily: "PlusJakartaSans-Regular" }]}>
+                  No recipes found for "{searchQuery}"
+                </Text>
+              </View>
+            )
+          ) : (
+            // Show recipe cards for categories
+            data.length > 0 ? (
+              <FlatList
+                data={data.slice(0, 5)}
+                keyExtractor={(item) => item.id.toString()}
+                renderItem={({ item }) => (
+                  <RecipeCard
+                    id={item.id}
+                    imageSource={{ uri: item.image }}
+                    title={item.title}
+                    time={`${item.readyInMinutes} mins`}
+                    servings={item.servings}
+                    category={activeCategory}
+                  />
+                )}
+                horizontal
+                showsHorizontalScrollIndicator={false}
               />
-            )}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-          />
+            ) : (
+              <View style={styles.noResults}>
+                <FontAwesome name="search" size={48} color="#E0E0E0" />
+                <Text style={[styles.noResultsText, { fontFamily: "PlusJakartaSans-Regular" }]}>
+                  No recipes available
+                </Text>
+              </View>
+            )
+          )}
         </View>
-
-        {/* Recipe of The Week Section */}
       </ScrollView>
     </View>
   );
@@ -236,6 +450,16 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#fff",
     paddingTop: 30,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 10,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: "#9E9E9E",
   },
   headerContent: {
     gap: 20,
@@ -277,6 +501,7 @@ const styles = StyleSheet.create({
   searchBarContainer: {
     marginTop: 20,
     marginBottom: 10,
+    zIndex: 1000,
   },
   searchBar: {
     flexDirection: "row",
@@ -300,6 +525,51 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#424242",
   },
+  dropdownContainer: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    marginTop: 8,
+    maxHeight: 200,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 5,
+  },
+  dropdownScroll: {
+    maxHeight: 200,
+  },
+  dropdownLoading: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 15,
+    gap: 10,
+  },
+  suggestionItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F5F5F5",
+    gap: 12,
+  },
+  suggestionText: {
+    flex: 1,
+    fontSize: 16,
+    color: "#424242",
+  },
+  suggestionType: {
+    fontSize: 12,
+    color: "#9E9E9E",
+    textTransform: "capitalize",
+    backgroundColor: "#F5F5F5",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
   categoryScroll: {
     marginTop: 15,
     paddingLeft: 5,
@@ -312,14 +582,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 20,
   },
-  categoryBtnActive: {
-    backgroundColor: "#000000ff",
-  },
   categoryBtnText: {
-    fontSize: 14,
-  },
-  categoryBtnTextActive: {
-    color: "#fff",
     fontSize: 14,
   },
   scrollContainer: {
@@ -337,5 +600,30 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     marginBottom: 20,
     color: "#000000ff",
+  },
+  noResults: {
+    alignItems: "center",
+    paddingVertical: 40,
+    gap: 15,
+  },
+  noResultsText: {
+    fontSize: 16,
+    color: "#9E9E9E",
+    textAlign: "center",
+  },
+  searchResultText: {
+    fontSize: 16,
+    color: "#424242",
+    flex: 1,
+    marginLeft: 12,
+  },
+  searchResultItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 15,
+    paddingHorizontal: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F5F5F5",
+    gap: 12,
   },
 });
