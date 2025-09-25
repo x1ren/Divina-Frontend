@@ -9,6 +9,7 @@ import {
   ViewStyle,
   TextStyle,
   ActivityIndicator,
+  Platform,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import MaskedView from "@react-native-masked-view/masked-view";
@@ -41,7 +42,10 @@ export default function GenerateScreen() {
   const [ingredients, setIngredients] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [generatedPrompt, setGeneratedPrompt] = useState<string | null>(null);
-  const url = "192.168.254.120:8080";
+  const url = Platform.select({
+    android: "10.0.2.2:8080",
+    default: "192.168.1.35:8080",
+  });
   const handleGenerateRecipe = async () => {
     if (!ingredients.trim()) return;
 

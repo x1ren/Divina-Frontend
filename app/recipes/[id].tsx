@@ -131,7 +131,7 @@ const InstructionItem = React.memo(
 );
 
 export default function RecipeDetails() {
-   const { id, category } = useLocalSearchParams();
+  const { id, category } = useLocalSearchParams();
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [loading, setLoading] = useState(true);
   const [isSaved, setIsSaved] = useState(false);
@@ -148,7 +148,10 @@ export default function RecipeDetails() {
 
   const saveAnim = useRef(new Animated.Value(1)).current;
   const scrollY = useRef(new Animated.Value(0)).current;
-  const url = "192.168.254.120:8080";
+  const url = Platform.select({
+    android: "10.0.2.2:8080",
+    default: "192.168.1.35:8080",
+  });
   const queryClient = useQueryClient();
 
   // Optimized toggle functions with useCallback to prevent re-renders
@@ -202,8 +205,8 @@ export default function RecipeDetails() {
         let dbData = null;
 
         if (fetchDb.ok) {
-          const text = await fetchDb.text(); 
-          dbData = text ? JSON.parse(text) : null; 
+          const text = await fetchDb.text();
+          dbData = text ? JSON.parse(text) : null;
         }
 
         if (dbData) {
@@ -246,6 +249,12 @@ export default function RecipeDetails() {
       readyInMinutes: recipe?.readyInMinutes,
       rating: recipe?.rating,
       image: recipe?.image,
+      category:
+        typeof recipe?.category === "string"
+          ? recipe.category.toLowerCase()
+          : typeof category === "string"
+          ? category.toLowerCase()
+          : "all",
     };
 
     // Optimistic React Query cache update with cancellation and rollback
@@ -262,6 +271,10 @@ export default function RecipeDetails() {
       }
       return old.filter((r) => String(r.id) !== String(id));
     });
+    console.log("DEBUG category:", {
+      recipeCategory: recipe?.category,
+      routeCategory: category,
+    });
 
     try {
       if (nextSaved) {
@@ -276,8 +289,12 @@ export default function RecipeDetails() {
             extendedIngredients: recipe?.extendedIngredients ?? [],
             readyInMinutes: recipe?.readyInMinutes ?? 0,
             servings: recipe?.servings ?? 0,
-            category: category ?? "All",
-            
+            category:
+              typeof recipe?.category === "string"
+                ? recipe.category.toLowerCase()
+                : typeof category === "string"
+                ? category.toLowerCase()
+                : "all",
           }),
         });
       } else {

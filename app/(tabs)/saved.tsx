@@ -12,13 +12,14 @@ import {
   TextInput,
   Animated,
   Dimensions,
+  Platform,
 } from "react-native";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useFonts } from "expo-font";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import RecipeCard from "@/components/RecipeSavedCard"; // adjust import path
 
-const { width } = Dimensions.get('window');
+const { width } = Dimensions.get("window");
 const cardWidth = (width - 60) / 2; // 2 columns with padding
 
 type Recipe = {
@@ -27,10 +28,17 @@ type Recipe = {
   readyInMinutes?: number;
   rating?: number;
   image?: string;
-  category?: 'breakfast' | 'lunch' | 'dinner' | 'snack';
+  category?: "breakfast" | "lunch" | "dinner" | "snack";
 };
 
-type CategoryFilter = 'All' | 'Collections' | 'Recent' | 'Breakfast' | 'Lunch' | 'Dinner' | 'Dessert';
+type CategoryFilter =
+  | "All"
+  | "Collections"
+  | "Recent"
+  | "Breakfast"
+  | "Lunch"
+  | "Dinner"
+  | "Dessert";
 
 type Styles = {
   container: ViewStyle;
@@ -94,8 +102,10 @@ type Styles = {
   loadingContainer: ViewStyle;
   loadingText: TextStyle;
 };
-
-const url = "192.168.254.120:8080";
+const url = Platform.select({
+  android: "10.0.2.2:8080",
+  default: "192.168.1.35:8080",
+});
 
 const fetchSavedRecipes = async (): Promise<Recipe[]> => {
   const res = await fetch(`http://${url}/api/save/recipes/1`);
@@ -114,7 +124,7 @@ const Saved = () => {
   });
 
   const [activeCategory, setActiveCategory] = useState<CategoryFilter>("All");
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   const {
     data: recipes = [],
@@ -132,7 +142,17 @@ const Saved = () => {
   // Animation values for each category
   const [animationValues] = useState(() => {
     const values: { [key: string]: Animated.Value } = {};
-    (["All", "Collections", "Recent", "Breakfast", "Lunch", "Dinner", "Dessert"] as CategoryFilter[]).forEach((category) => {
+    (
+      [
+        "All",
+        "Collections",
+        "Recent",
+        "Breakfast",
+        "Lunch",
+        "Dinner",
+        "Dessert",
+      ] as CategoryFilter[]
+    ).forEach((category) => {
       values[category] = new Animated.Value(category === "All" ? 1 : 0);
     });
     return values;
@@ -147,6 +167,18 @@ const Saved = () => {
       recipesLength: recipes.length,
       cached,
     });
+
+    // Debug categories
+    if (recipes.length > 0) {
+      console.log(
+        "[SavedTab] Recipe categories:",
+        recipes.map((r) => ({
+          id: r.id,
+          title: r.title,
+          category: r.category,
+        }))
+      );
+    }
   }, [recipes, isLoading, isFetching, queryClient]);
 
   if (!fontsLoaded) {
@@ -156,7 +188,9 @@ const Saved = () => {
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <Text style={[styles.loadingText, { fontFamily: "PlusJakartaSans-Medium" }]}>
+        <Text
+          style={[styles.loadingText, { fontFamily: "PlusJakartaSans-Medium" }]}
+        >
           Loading saved recipes...
         </Text>
       </View>
@@ -164,12 +198,35 @@ const Saved = () => {
   }
 
   const collections = [
-    { id: "1", name: "Quick & Easy", count: 12, image: require("../../assets/images/icon.png") },
-    { id: "2", name: "Date Night", count: 8, image: require("../../assets/images/icon.png") },
-    { id: "3", name: "Healthy Meals", count: 15, image: require("../../assets/images/icon.png") },
+    {
+      id: "1",
+      name: "Quick & Easy",
+      count: 12,
+      image: require("../../assets/images/icon.png"),
+    },
+    {
+      id: "2",
+      name: "Date Night",
+      count: 8,
+      image: require("../../assets/images/icon.png"),
+    },
+    {
+      id: "3",
+      name: "Healthy Meals",
+      count: 15,
+      image: require("../../assets/images/icon.png"),
+    },
   ];
 
-  const categories: CategoryFilter[] = ["All", "Collections", "Recent", "Breakfast", "Lunch", "Dinner", "Dessert"];
+  const categories: CategoryFilter[] = [
+    "All",
+    "Collections",
+    "Recent",
+    "Breakfast",
+    "Lunch",
+    "Dinner",
+    "Dessert",
+  ];
 
   const handleCategoryPress = (category: CategoryFilter) => {
     setActiveCategory(category);
@@ -185,24 +242,29 @@ const Saved = () => {
 
   // FIXED: Better category filtering logic
   const getFilteredRecipes = (): Recipe[] => {
-  if (activeCategory === "All") return recipes;
-  if (activeCategory === "Recent") return [...recipes].sort((a, b) => b.id - a.id);
-  if (activeCategory === "Collections") return [];
+    if (activeCategory === "All") return recipes;
+    if (activeCategory === "Recent")
+      return [...recipes].sort((a, b) => b.id - a.id);
+    if (activeCategory === "Collections") return [];
 
-  // Normalize category for comparison
-  return recipes.filter(recipe => {
-    if (!recipe.category) return false;
-    const normalizedCategory = recipe.category.toLowerCase();
-    switch (activeCategory) {
-      case "Breakfast": return normalizedCategory === "breakfast";
-      case "Lunch": return normalizedCategory === "lunch";
-      case "Dinner": return normalizedCategory === "dinner";
-      case "Dessert": return normalizedCategory === "snack";
-      default: return false;
-    }
-  });
-};
-
+    // Normalize category for comparison
+    return recipes.filter((recipe) => {
+      if (!recipe.category) return false;
+      const normalizedCategory = recipe.category.toLowerCase();
+      switch (activeCategory) {
+        case "Breakfast":
+          return normalizedCategory === "breakfast";
+        case "Lunch":
+          return normalizedCategory === "lunch";
+        case "Dinner":
+          return normalizedCategory === "dinner";
+        case "Dessert":
+          return normalizedCategory === "snack";
+        default:
+          return false;
+      }
+    });
+  };
 
   const filteredRecipes = getFilteredRecipes();
 
@@ -211,28 +273,41 @@ const Saved = () => {
     if (category === "All") return recipes.length;
     if (category === "Collections") return collections.length;
     if (category === "Recent") return recipes.length;
-    
-    return recipes.filter(recipe => {
+
+    return recipes.filter((recipe) => {
       if (!recipe.category) return false;
       const recipeCategory = recipe.category.toLowerCase();
       switch (category) {
-        case "Breakfast": return recipeCategory === "breakfast";
-        case "Lunch": return recipeCategory === "lunch";
-        case "Dinner": return recipeCategory === "dinner";
-        case "Dessert": return recipeCategory === "snack";
-        default: return false;
+        case "Breakfast":
+          return recipeCategory === "breakfast";
+        case "Lunch":
+          return recipeCategory === "lunch";
+        case "Dinner":
+          return recipeCategory === "dinner";
+        case "Dessert":
+          return recipeCategory === "snack";
+        default:
+          return false;
       }
     }).length;
   };
 
   const totalSaved = recipes.length;
   const totalCollections = collections.length;
-  const avgRating = recipes.length > 0 
-    ? (recipes.reduce((sum, recipe) => sum + (recipe.rating || 0), 0) / recipes.length).toFixed(1)
-    : "0.0";
+  const avgRating =
+    recipes.length > 0
+      ? (
+          recipes.reduce((sum, recipe) => sum + (recipe.rating || 0), 0) /
+          recipes.length
+        ).toFixed(1)
+      : "0.0";
 
   const renderGridCard = (recipe: Recipe) => (
-    <TouchableOpacity key={recipe.id} style={styles.recipeCard} activeOpacity={0.9}>
+    <TouchableOpacity
+      key={recipe.id}
+      style={styles.recipeCard}
+      activeOpacity={0.9}
+    >
       <View style={styles.recipeImageContainer}>
         <Image source={{ uri: recipe.image }} style={styles.recipeImage} />
         <View style={styles.saveIndicator}>
@@ -241,18 +316,34 @@ const Saved = () => {
         <View style={styles.recipeOverlay}>
           <View style={styles.metricBadge}>
             <FontAwesome name="star" size={10} color="#FFD700" />
-            <Text style={[styles.metricText, { fontFamily: "PlusJakartaSans-Medium" }]}>
+            <Text
+              style={[
+                styles.metricText,
+                { fontFamily: "PlusJakartaSans-Medium" },
+              ]}
+            >
               {recipe.rating?.toFixed(1) || "4.5"}
             </Text>
           </View>
         </View>
       </View>
       <View style={styles.recipeInfo}>
-        <Text style={[styles.recipeName, { fontFamily: "PlusJakartaSans-SemiBold" }]} numberOfLines={2}>
+        <Text
+          style={[
+            styles.recipeName,
+            { fontFamily: "PlusJakartaSans-SemiBold" },
+          ]}
+          numberOfLines={2}
+        >
           {recipe.title}
         </Text>
         <View style={styles.recipeMetrics}>
-          <Text style={[styles.metricText, { fontFamily: "PlusJakartaSans-Regular", color: "#9E9E9E" }]}>
+          <Text
+            style={[
+              styles.metricText,
+              { fontFamily: "PlusJakartaSans-Regular", color: "#9E9E9E" },
+            ]}
+          >
             {recipe.readyInMinutes || 30} mins • Easy
           </Text>
         </View>
@@ -261,7 +352,11 @@ const Saved = () => {
   );
 
   const renderListCard = (recipe: Recipe) => (
-    <TouchableOpacity key={recipe.id} style={styles.listCard} activeOpacity={0.8}>
+    <TouchableOpacity
+      key={recipe.id}
+      style={styles.listCard}
+      activeOpacity={0.8}
+    >
       <View style={styles.listImageContainer}>
         <Image source={{ uri: recipe.image }} style={styles.listImage} />
         <View style={styles.saveIndicator}>
@@ -269,24 +364,44 @@ const Saved = () => {
         </View>
       </View>
       <View style={styles.listInfo}>
-        <Text style={[styles.listName, { fontFamily: "PlusJakartaSans-SemiBold" }]}>
+        <Text
+          style={[styles.listName, { fontFamily: "PlusJakartaSans-SemiBold" }]}
+        >
           {recipe.title}
         </Text>
         <View style={styles.listMetrics}>
           <View style={styles.listMetricItem}>
             <FontAwesome name="clock-o" size={12} color="#9E9E9E" />
-            <Text style={[styles.listMetricText, { fontFamily: "PlusJakartaSans-Regular" }]}>
+            <Text
+              style={[
+                styles.listMetricText,
+                { fontFamily: "PlusJakartaSans-Regular" },
+              ]}
+            >
               {recipe.readyInMinutes || 30} mins
             </Text>
           </View>
           <View style={styles.listMetricItem}>
             <FontAwesome name="star" size={12} color="#FFD700" />
-            <Text style={[styles.listMetricText, { fontFamily: "PlusJakartaSans-Regular" }]}>
+            <Text
+              style={[
+                styles.listMetricText,
+                { fontFamily: "PlusJakartaSans-Regular" },
+              ]}
+            >
               {recipe.rating?.toFixed(1) || "4.5"}
             </Text>
           </View>
-          <Text style={[styles.listMetricText, { fontFamily: "PlusJakartaSans-Regular", opacity: 0.6 }]}>
-            {recipe.category ? recipe.category.charAt(0).toUpperCase() + recipe.category.slice(1) : "Saved recently"}
+          <Text
+            style={[
+              styles.listMetricText,
+              { fontFamily: "PlusJakartaSans-Regular", opacity: 0.6 },
+            ]}
+          >
+            {recipe.category
+              ? recipe.category.charAt(0).toUpperCase() +
+                recipe.category.slice(1)
+              : "Saved recently"}
           </Text>
         </View>
       </View>
@@ -297,14 +412,28 @@ const Saved = () => {
   );
 
   const renderCollectionCard = (collection: any) => (
-    <TouchableOpacity key={collection.id} style={styles.collectionCard} activeOpacity={0.9}>
+    <TouchableOpacity
+      key={collection.id}
+      style={styles.collectionCard}
+      activeOpacity={0.9}
+    >
       <Image source={collection.image} style={styles.collectionImage} />
       <View style={styles.collectionOverlay}>
         <View style={styles.collectionInfo}>
-          <Text style={[styles.collectionName, { fontFamily: "PlusJakartaSans-SemiBold" }]}>
+          <Text
+            style={[
+              styles.collectionName,
+              { fontFamily: "PlusJakartaSans-SemiBold" },
+            ]}
+          >
             {collection.name}
           </Text>
-          <Text style={[styles.collectionCount, { fontFamily: "PlusJakartaSans-Regular" }]}>
+          <Text
+            style={[
+              styles.collectionCount,
+              { fontFamily: "PlusJakartaSans-Regular" },
+            ]}
+          >
             {collection.count} recipes
           </Text>
         </View>
@@ -327,13 +456,13 @@ const Saved = () => {
 
   return (
     <View style={styles.container}>
-      
-      
       {/* Header */}
       <View style={styles.headerContent}>
         <View style={styles.headerTop}>
           <View>
-            <Text style={[styles.greeting, { fontFamily: "PlusJakartaSans-Bold" }]}>
+            <Text
+              style={[styles.greeting, { fontFamily: "PlusJakartaSans-Bold" }]}
+            >
               My Kitchen
             </Text>
           </View>
@@ -341,32 +470,64 @@ const Saved = () => {
             <FontAwesome name="plus" size={20} color="#4A90E2" />
           </TouchableOpacity>
         </View>
-        <Text style={[styles.subtitle, { fontFamily: "PlusJakartaSans-SemiBold" }]}>
+        <Text
+          style={[styles.subtitle, { fontFamily: "PlusJakartaSans-SemiBold" }]}
+        >
           Your culinary collection{"\n"}organized just the way you like it
         </Text>
         {/* Stats */}
         <View style={styles.statsContainer}>
           <View style={styles.statItem}>
-            <Text style={[styles.statNumber, { fontFamily: "PlusJakartaSans-Bold" }]}>
+            <Text
+              style={[
+                styles.statNumber,
+                { fontFamily: "PlusJakartaSans-Bold" },
+              ]}
+            >
               {totalSaved}
             </Text>
-            <Text style={[styles.statLabel, { fontFamily: "PlusJakartaSans-Regular" }]}>
+            <Text
+              style={[
+                styles.statLabel,
+                { fontFamily: "PlusJakartaSans-Regular" },
+              ]}
+            >
               Saved
             </Text>
           </View>
           <View style={styles.statItem}>
-            <Text style={[styles.statNumber, { fontFamily: "PlusJakartaSans-Bold" }]}>
+            <Text
+              style={[
+                styles.statNumber,
+                { fontFamily: "PlusJakartaSans-Bold" },
+              ]}
+            >
               {totalCollections}
             </Text>
-            <Text style={[styles.statLabel, { fontFamily: "PlusJakartaSans-Regular" }]}>
+            <Text
+              style={[
+                styles.statLabel,
+                { fontFamily: "PlusJakartaSans-Regular" },
+              ]}
+            >
               Collections
             </Text>
           </View>
           <View style={styles.statItem}>
-            <Text style={[styles.statNumber, { fontFamily: "PlusJakartaSans-Bold" }]}>
+            <Text
+              style={[
+                styles.statNumber,
+                { fontFamily: "PlusJakartaSans-Bold" },
+              ]}
+            >
               {avgRating}
             </Text>
-            <Text style={[styles.statLabel, { fontFamily: "PlusJakartaSans-Regular" }]}>
+            <Text
+              style={[
+                styles.statLabel,
+                { fontFamily: "PlusJakartaSans-Regular" },
+              ]}
+            >
               Avg Rating
             </Text>
           </View>
@@ -375,7 +536,10 @@ const Saved = () => {
           <View style={styles.searchBar}>
             <FontAwesome name="search" size={18} color="#9E9E9E" />
             <TextInput
-              style={[styles.searchInput, { fontFamily: "PlusJakartaSans-Regular" }]}
+              style={[
+                styles.searchInput,
+                { fontFamily: "PlusJakartaSans-Regular" },
+              ]}
               placeholder="Search your saved recipes..."
               placeholderTextColor="#9E9E9E"
             />
@@ -392,7 +556,7 @@ const Saved = () => {
           {categories.map((category) => {
             const animatedValue = animationValues[category];
             const categoryCount = getCategoryCount(category);
-            
+
             return (
               <TouchableOpacity
                 key={category}
@@ -423,7 +587,10 @@ const Saved = () => {
                       },
                     ]}
                   >
-                    {category} {categoryCount > 0 && category !== "Collections" ? `(${categoryCount})` : ""}
+                    {category}{" "}
+                    {categoryCount > 0 && category !== "Collections"
+                      ? `(${categoryCount})`
+                      : ""}
                   </Animated.Text>
                 </Animated.View>
               </TouchableOpacity>
@@ -433,11 +600,19 @@ const Saved = () => {
       </View>
 
       {/* Content Section */}
-      <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.scrollContainer}
+        showsVerticalScrollIndicator={false}
+      >
         {activeCategory === "Collections" ? (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={[styles.sectionTitle, { fontFamily: "PlusJakartaSans-SemiBold" }]}>
+              <Text
+                style={[
+                  styles.sectionTitle,
+                  { fontFamily: "PlusJakartaSans-SemiBold" },
+                ]}
+              >
                 Recipe Collections
               </Text>
             </View>
@@ -448,26 +623,46 @@ const Saved = () => {
         ) : (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Text style={[styles.sectionTitle, { fontFamily: "PlusJakartaSans-SemiBold" }]}>
-                {activeCategory === "All" ? "All Recipes" : activeCategory} ({filteredRecipes.length})
+              <Text
+                style={[
+                  styles.sectionTitle,
+                  { fontFamily: "PlusJakartaSans-SemiBold" },
+                ]}
+              >
+                {activeCategory === "All" ? "All Recipes" : activeCategory} (
+                {filteredRecipes.length})
               </Text>
               <View style={styles.viewToggle}>
                 <TouchableOpacity
-                  style={[styles.toggleButton, viewMode === 'grid' && styles.activeToggleButton]}
-                  onPress={() => setViewMode('grid')}
+                  style={[
+                    styles.toggleButton,
+                    viewMode === "grid" && styles.activeToggleButton,
+                  ]}
+                  onPress={() => setViewMode("grid")}
                 >
-                  <FontAwesome name="th" size={14} color={viewMode === 'grid' ? "#fff" : "#9E9E9E"} />
+                  <FontAwesome
+                    name="th"
+                    size={14}
+                    color={viewMode === "grid" ? "#fff" : "#9E9E9E"}
+                  />
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[styles.toggleButton, viewMode === 'list' && styles.activeToggleButton]}
-                  onPress={() => setViewMode('list')}
+                  style={[
+                    styles.toggleButton,
+                    viewMode === "list" && styles.activeToggleButton,
+                  ]}
+                  onPress={() => setViewMode("list")}
                 >
-                  <FontAwesome name="list" size={14} color={viewMode === 'list' ? "#fff" : "#9E9E9E"} />
+                  <FontAwesome
+                    name="list"
+                    size={14}
+                    color={viewMode === "list" ? "#fff" : "#9E9E9E"}
+                  />
                 </TouchableOpacity>
               </View>
             </View>
             {filteredRecipes.length > 0 ? (
-              viewMode === 'grid' ? (
+              viewMode === "grid" ? (
                 <View style={styles.gridContainer}>
                   {filteredRecipes.map(renderRecipeCard)}
                 </View>
@@ -481,17 +676,35 @@ const Saved = () => {
                 <View style={styles.emptyStateIcon}>
                   <FontAwesome name="heart-o" size={48} color="#9E9E9E" />
                 </View>
-                <Text style={[styles.emptyStateTitle, { fontFamily: "PlusJakartaSans-SemiBold" }]}>
-                  No {activeCategory !== "All" ? activeCategory.toLowerCase() + " " : ""}recipes yet
+                <Text
+                  style={[
+                    styles.emptyStateTitle,
+                    { fontFamily: "PlusJakartaSans-SemiBold" },
+                  ]}
+                >
+                  No{" "}
+                  {activeCategory !== "All"
+                    ? activeCategory.toLowerCase() + " "
+                    : ""}
+                  recipes yet
                 </Text>
-                <Text style={[styles.emptyStateSubtitle, { fontFamily: "PlusJakartaSans-Regular" }]}>
-                  {activeCategory === "All" 
+                <Text
+                  style={[
+                    styles.emptyStateSubtitle,
+                    { fontFamily: "PlusJakartaSans-Regular" },
+                  ]}
+                >
+                  {activeCategory === "All"
                     ? "Discover amazing recipes and start building your personal cookbook"
-                    : `Save some ${activeCategory.toLowerCase()} recipes to see them here`
-                  }
+                    : `Save some ${activeCategory.toLowerCase()} recipes to see them here`}
                 </Text>
                 <TouchableOpacity style={styles.emptyStateButton}>
-                  <Text style={[styles.emptyStateButtonText, { fontFamily: "PlusJakartaSans-SemiBold" }]}>
+                  <Text
+                    style={[
+                      styles.emptyStateButtonText,
+                      { fontFamily: "PlusJakartaSans-SemiBold" },
+                    ]}
+                  >
                     Explore Recipes
                   </Text>
                 </TouchableOpacity>
