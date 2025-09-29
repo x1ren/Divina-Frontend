@@ -242,7 +242,7 @@ export default function RecipeDetails() {
     const nextSaved = !isSaved;
     setIsSaved(nextSaved);
 
-    // Minimal recipe shape for the saved list
+    // Minimal recipe shape for the sa
     const savedRecipe = {
       id: Number(id),
       title: recipe?.title ?? "",
